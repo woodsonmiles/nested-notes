@@ -1,4 +1,6 @@
 from typing import List
+from row import Row
+from column import Column
 
 
 class SimpleNestedList(object):
@@ -6,18 +8,18 @@ class SimpleNestedList(object):
     Encapsulates the column and level data
     """
 
-    def __init__(self, tab: str, fields: List[str] = None):
-        self.__tab = tab
+    def __init__(self, fields: List[str] = None, columns: List[Column] = None):
+        """
+        :param fields:
+        :param columns: Should only be used privately by SimpleNestedList.
+            Unfortunately, python does not support private constructors.
+        """
         if fields is None:
             fields = []
-        self.__columns = []
-        self.__fields = []
-
-        # columns of text
-        for field in fields:
-            col = _Column()
-            self.__columns.append(col)
-            self.__fields.append(_Field(field, col, self.__tab))
+        if columns is None:
+            columns = []
+        self.__columns = columns
+        self.__row = Row(columns, fields)
         # links to neighboring nested list nodes
         self.__child = self.null
         self.__sibling = self.null
@@ -27,18 +29,18 @@ class SimpleNestedList(object):
         self.__level = 0
 
     @staticmethod
-    def _new_row(tab: str, level: int, columns: List[_Column], texts: List[str] = None,
-                 next_sibling=None, first_child=None):
+    def _new_nested_list(level: int, columns: List[Column], fields: List[str] = None,
+                         next_sibling=None, first_child=None):
         """
         :return: new NestedList
         """
-        if texts is None:
-            texts = []
-        node = SimpleNestedList(tab)
+        if fields is None:
+            fields = []
+        node = SimpleNestedList(fields)
         node.__columns = columns
-        for index in range(len(columns), len(texts)):
+        for index in range(len(columns), len(fields)):
             node.__columns.append(_Column())
-        for index, text in enumerate(texts):
+        for index, text in enumerate(fields):
             node.__fields.append(_Field(text, node.__columns[index], tab))
 
         node.__level = level
@@ -102,8 +104,8 @@ class SimpleNestedList(object):
     def insert_sibling(self, texts: List[str] = None):
         if texts is None:
             texts = []
-        self.__sibling = self._new_row(tab=self.__tab, columns=self._get_columns(), texts=texts,
-                                       level=self.__level, next_sibling=self.__sibling)
+        self.__sibling = self._new_nested_list(tab=self.__tab, columns=self._get_columns(), fields=texts,
+                                               level=self.__level, next_sibling=self.__sibling)
         return self.__sibling
 
     def delete_sibling_list(self):
@@ -159,8 +161,8 @@ class SimpleNestedList(object):
         if texts is None:
             texts = []
         child_cols = self.__child._get_columns()
-        self.__child = self._new_row(tab=self.__tab, columns=child_cols, texts=texts,
-                                     level=self.__level + 1, next_sibling=self.__child)
+        self.__child = self._new_nested_list(tab=self.__tab, columns=child_cols, fields=texts,
+                                             level=self.__level + 1, next_sibling=self.__child)
             return self.__child
 
     def _set_level(self, new_level: int):
