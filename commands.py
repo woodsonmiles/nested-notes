@@ -57,7 +57,7 @@ class UnIndent(KeyCommand):
 
 class UnSplitBackspace(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_BACKSPACE and not model.at_line_start() and model.get_rel_field_index() == 0
+        return key == curses.KEY_BACKSPACE and not model.at_line_start() and model.at_field_start()
 
     def execute(self, key: int, model: Model):
         model.combine_fields(LateralDirection.LEFT)
@@ -82,8 +82,7 @@ class Insert(KeyCommand):
 
 class TextBackspace(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        index = model.get_rel_field_index()
-        return key == curses.KEY_BACKSPACE and index > 0
+        return key == curses.KEY_BACKSPACE and not model.at_field_start()
 
     def execute(self, key: int, model: Model):
         model.delete(-1)
@@ -91,9 +90,7 @@ class TextBackspace(KeyCommand):
 
 class TextDelete(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        index = model.get_rel_field_index()
-        text_len = model.get_text_len()
-        return key == curses.KEY_DC and index < text_len
+        return key == curses.KEY_DC and not model.at_field_end()
 
     def execute(self, key: int, model: Model):
         model.delete(0)
@@ -144,13 +141,7 @@ class Left(KeyCommand):
         return key == curses.KEY_LEFT
 
     def execute(self, key: int, model: Model):
-        index: int = model.get_rel_field_index()
-        padding: int = model.get_padding_len()
-        if index == 0:
-            num_spaces = padding
-        else:
-            num_spaces = 1
-        model.move(LateralDirection.LEFT, num_spaces)
+        model.move(LateralDirection.LEFT)
 
 
 class Right(KeyCommand):
@@ -158,10 +149,8 @@ class Right(KeyCommand):
         return key == curses.KEY_RIGHT
 
     def execute(self, key: int, model: Model):
-        index: int = model.get_rel_field_index()
-        field_size: int = model.get_text_len()
         padding_len: int = model.get_padding_len()
-        if index == field_size:
+        if model.at_field_end():
             num_spaces = padding_len
         else:
             num_spaces = 1
@@ -175,8 +164,8 @@ class CtrLeft(KeyCommand):
     def execute(self, key: int, model: Model):
         # TODO - have control arrows change behavior for nodes of with less than some number of fields to skip words
         rel_pos = model.get_rel_field_index()
-        if 0 == rel_pos:
-            movement = rel_pos + model.get_neighbor_column_width(LateralDirection.LEFT)
+        if rel_pos == 0:
+            movement = model.get_neighbor_column_width(LateralDirection.LEFT)
         else:
             movement = rel_pos
         model.move(LateralDirection.LEFT, movement)

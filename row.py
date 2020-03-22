@@ -37,6 +37,13 @@ class Row(object):
         for field in fields:
             self.append(field)
 
+    def __del__(self):
+        """
+        detach all columns from self
+        """
+        for i in range(len(self)):
+            self.__detach_columns(i)
+
     def delete(self, index):
         """
         Delete the field at index and update related column
@@ -75,6 +82,16 @@ class Row(object):
         """
         return len(self.__fields)
 
+    def width(self) -> int:
+        """
+        :return: Sum of all characters in this row, including padding
+        Not including indentation
+        """
+        to_return = 0
+        for field in self:
+            to_return += len(field)
+        return to_return
+
     def padded_field_len(self, index: int):
         return self.__columns[index].width + self.__tab_len
 
@@ -84,14 +101,18 @@ class Row(object):
         """
         return self.__fields[index]
 
-    def padding_len(self, index: int):
-        return self.padded_field_len(index) - self.text_len(index)
-
     def padded_field(self, index: int):
         return self.__fields[index] + ' ' * self.padding_len(index)
 
+    def padding_len(self, index: int):
+        return self.padded_field_len(index) - self.text_len(index)
+
     def text_len(self, index: int):
         return len(self.__fields[index])
+
+    @property
+    def fields(self) -> List[str]:
+        return self.__fields
 
     def __iter__(self):
         class RowIter(object):

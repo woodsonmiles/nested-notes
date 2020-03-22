@@ -72,8 +72,8 @@ class Model(object):
         Puts cursor back in x-axis limits if outside
         """
         node: NestedList = self.__get_node()
-        left_limit: int = node.get_indent_len()
-        right_limit: int = len(node)
+        left_limit: int = len(node.get_indent)
+        right_limit: int = node.width
         if self.__cursor_x < left_limit:
             self.__cursor_x = left_limit
         elif self.__cursor_x > right_limit:
@@ -167,23 +167,22 @@ class Model(object):
         """
         :return: whether the cursor is at the start of the line (past the indent)
         """
-        indent_len = self.__get_node().get_indent_len()
-        return self.__cursor_x == indent_len
+        return self.__cursor_x == self.__get_node().indent_padding
 
     def at_line_end(self):
         """
         :return: whether the cursor is at the start of the line (past the indent)
         """
-        return self.__cursor_x == len(self.__get_node())
+        return self.__cursor_x == self.__get_node().width
 
     def at_field_end(self) -> bool:
-        return self.get_rel_field_index() == self.get_text_len()
+        return self.__get_node().get_selected_field_end() == self.__cursor_x
 
     def at_field_start(self) -> bool:
-        return self.get_rel_field_index() == 0
+        return self.__get_node().get_selected_field_start() == self.__cursor_x
 
-    def get_rel_field_index(self) -> int:
-        return self.__get_node().get_rel_field_index(self.__cursor_x)
+    # def get_rel_field_index(self) -> int:
+    #    return self.__get_node().__get_index_in_field(self.__cursor_x)
 
     def insert(self, insertion: str):
         node: NestedList = self.__get_node()
@@ -212,7 +211,7 @@ class Model(object):
         """
         previous: NestedList = self.get_previous_sibling()
         node: NestedList = self.__get_node()
-        node.indent(previous)
+        node.indent_padding(previous)
         self.__cursor_x += len(self.__tab)
 
     def unindent_current_node(self):
