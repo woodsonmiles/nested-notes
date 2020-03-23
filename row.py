@@ -1,5 +1,5 @@
 from column import Column
-from typing import List, Callable
+from typing import List
 
 
 class Row(object):
@@ -9,7 +9,7 @@ class Row(object):
 
     __tab_len = 4
 
-    def __detach_columns(self, index: int):
+    def __detach_columns(self, index: int = 0):
         """
         remove fields from respective columns from index to the end of self.__fields
         :param index: starting field to detach from its column
@@ -18,7 +18,7 @@ class Row(object):
             field_len = len(self.__fields[index])
             self.__columns[index].remove_field(field_len)
 
-    def __attach_columns(self, index: int):
+    def __attach_columns(self, index: int = 0):
         """
         add new field lengths to each column from index to the end of self.__fields
         :param index: starting field to attach to its column
@@ -41,18 +41,25 @@ class Row(object):
         """
         detach all columns from self
         """
-        for i in range(len(self)):
-            self.__detach_columns(i)
+        self.__detach_columns()
 
     def delete(self, index):
         """
         Delete the field at index and update related column
         """
+        assert len(self) > index
         self.__detach_columns(index)
         del self.__fields[index]
         self.__attach_columns(index)
 
     def insert(self, index: int, text: str):
+        """
+        Precondition - assumes self.fields have all been attached to their columns already
+        This method cannot be used by init to initialize its fields
+        :param index:
+        :param text:
+        :return:
+        """
         self.__detach_columns(index)
         # Insert new field
         self.__fields.insert(index, text)
@@ -70,7 +77,11 @@ class Row(object):
         self.__columns[index].add_field(len(self.__fields[index]))
 
     def append(self, text: str):
-        self.insert(len(self), text)
+        self.__fields.append(text)
+        # Add new column if necessary
+        if len(self.__fields) > len(self.__columns):
+            self.__columns.append(Column())
+        self.__attach_columns(len(self)-1)
 
     """
     Getters
@@ -92,7 +103,7 @@ class Row(object):
             to_return += len(field)
         return to_return
 
-    def padded_field_len(self, index: int):
+    def __padded_field_len(self, index: int):
         return self.__columns[index].width + self.__tab_len
 
     def field(self, index: int):
@@ -102,12 +113,12 @@ class Row(object):
         return self.__fields[index]
 
     def padded_field(self, index: int):
-        return self.__fields[index] + ' ' * self.padding_len(index)
+        return self.__fields[index] + ' ' * self.__padding_len(index)
 
-    def padding_len(self, index: int):
-        return self.padded_field_len(index) - self.text_len(index)
+    def __padding_len(self, index: int):
+        return self.__padded_field_len(index) - self.__text_len(index)
 
-    def text_len(self, index: int):
+    def __text_len(self, index: int):
         return len(self.__fields[index])
 
     @property

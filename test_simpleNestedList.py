@@ -2,6 +2,7 @@
 import unittest
 from simpleNestedList import SimpleNestedList
 
+
 class TestSimpleNestedList(unittest.TestCase):
 
     def test_eq(self):

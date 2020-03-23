@@ -43,12 +43,13 @@ class Model(object):
         self.__root: NestedList = self.__init_display()
         self.__page = self.__root.count() // self.__window_rows
 
-    def __init_display(self) -> NestedList:
-        root = NestedList(self.__tab, ["Information about the bean"])
-        root.new_child(["The Bean", "Yes!", "Certainly", "Seldom", "Yum"])
-        root.new_child(["Lima Bean", "Um?", "Totes", "Nope", "Debate-skies"])
-        root.new_child(["This Bean", "I hope", "10/10", "Yep", "1/10"])
-        root.new_child(["Subject", "Good", "Bean-like", "Squidgely", "Grumpy", "Cookery"])
+    @staticmethod
+    def __init_display() -> NestedList:
+        root = NestedList(["Information about the bean"])
+        root.insert_child(["The Bean", "Yes!", "Certainly", "Seldom", "Yum"])
+        root.insert_child(["Lima Bean", "Um?", "Totes", "Nope", "Debate-skies"])
+        root.insert_child(["This Bean", "I hope", "10/10", "Yep", "1/10"])
+        root.insert_child(["Subject", "Good", "Bean-like", "Squidgely", "Grumpy", "Cookery"])
         return root
 
     def __bottom(self) -> int:
@@ -72,17 +73,18 @@ class Model(object):
         Puts cursor back in x-axis limits if outside
         """
         node: NestedList = self.__get_node()
-        left_limit: int = len(node.get_indent)
+        left_limit: int = len(node.indent_padding)
         right_limit: int = node.width
+        # put within node
         if self.__cursor_x < left_limit:
             self.__cursor_x = left_limit
         elif self.__cursor_x > right_limit:
             self.__cursor_x = right_limit
         else:  # cursor is within bounds
-            index: int = self.get_rel_field_index()
-            if index > node.get_text_len(self.__cursor_x):
-                # If cursor in padding of field, put it at end of text
-                self.__cursor_x -= index - node.get_text_len(self.__cursor_x)
+            field_end = node.get_selected_field_end(self.__cursor_x)
+            if field_end < self.__cursor_x:
+                # if cursor in padding of field, put it at end
+                self.__cursor_x = field_end
 
     def move(self, direction: Direction, num_spaces: int = 1):
         if isinstance(direction, LateralDirection):
@@ -134,25 +136,26 @@ class Model(object):
     def display(self):
         """Display the items on window"""
         self.__view.clear()
-        start: NestedList = self.__get_node(start=self.__top)
-        for abs_row_index, node in enumerate(start):
+        for abs_row_index, node in enumerate(self.__root):
             if abs_row_index < self.__top:
+                # lines before the top of the screen
                 continue
             row_index = abs_row_index - self.__top
             if row_index == self.__window_rows:
                 break   # stop at end of window
-            indent = node.get_indent()
-            self.__view.addstr(row_index, 0, indent, Styles.EVEN)
-            printed_chars = len(indent)
-            for col_index, text in enumerate(node.get_texts()):
+            # Lines within visible screen
+            indent_padding = node.indent_padding
+            self.__view.addstr(row_index, 0, indent_padding, Styles.EVEN)
+            printed_chars = len(indent_padding)
+            for field_index, text in enumerate(node.row_iter):
                 """
                 style changes between field
                 indent precedes first field
                 All but last field has trailing tab
                 """
-                if col_index == 0:
+                if field_index == 0:
                     style = Styles.HEADER
-                elif col_index % 2:
+                elif field_index % 2:
                     style = Styles.EVEN
                 else:
                     style = Styles.ODD
@@ -262,13 +265,12 @@ class Model(object):
         self.move(LateralDirection.LEFT, self.__cursor_x)
 
     def combine_nodes(self):
-        prev_row: NestedList = self.__get_node(offset=-1)
-        prev_sibling: NestedList = self.get_previous_sibling()
         node = self.__get_node()
         assert node.get_level() == 0
+        prev_row: NestedList = self.__get_node(offset=-1)
         self.move(VerticalDirection.UP)
         self.move_end(LateralDirection.RIGHT)
-        node.give_fields(prev_row, prev_sibling)
+        node.combine(prev_row)
         self.move(LateralDirection.RIGHT, self.get_padding_len())
 
     def get_text_len(self) -> int:

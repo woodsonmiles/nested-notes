@@ -166,6 +166,10 @@ class SimpleNestedList(object):
         self.__row.replace(index, replacement)
 
     def _get_field(self, index: int) -> str:
+        """
+        :param index:
+        :return: Unpadded field at index
+        """
         return self.__row.field(index)
 
 

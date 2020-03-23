@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import unittest
 from row import Row
+from typing import List
 
 
 class TestRow(unittest.TestCase):
@@ -25,6 +26,39 @@ class TestRow(unittest.TestCase):
         row_other = Row(diff_columns, ["1234"])
         self.assertNotEqual(row, row_diff3)
 
+    def test_columns(self):
+        """
+        Tests consistency of column lengths when rows are created or deleted with the same list of columns
+        """
+        columns = []
+        one = Row(columns, fields=["123", "123", "12345"])
+        self.__test_columns_helper([one], [7, 7, 9])
+        two = Row(columns, fields=["1", "1", "1"])
+        self.__test_columns_helper([one, two], [7, 7, 9])
+        three = Row(columns, fields=["1234", "1234567", "123"])
+        self.__test_columns_helper([one, two, three], [8, 11, 9])
+        del one
+        self.__test_columns_helper([two, three], [8, 11, 7])
+        del three
+        self.__test_columns_helper([two], [5, 5, 5])
+        four = Row(columns)
+        self.__test_columns_helper([two], [5, 5, 5])
+        four.append("56")
+        self.__test_columns_helper([two], [6, 5, 5])
+        four.insert(0, "567")
+        self.__test_columns_helper([two], [7, 6, 5])
+        four.insert(2, "5678")
+        self.__test_columns_helper([two], [7, 6, 8])
+        four.delete(0)
+        self.__test_columns_helper([two], [6, 8, 5])
+        four.delete(1)
+        self.__test_columns_helper([two], [6, 5, 5])
+
+    def __test_columns_helper(self, rows: List[Row], target_lengths: List[int]):
+        for row in rows:
+            for i in range(len(row)):
+                self.assertEqual(len(row.padded_field(i)), target_lengths[i])
+
     def test_insert(self):
         actual = Row(columns=[], fields=["one", "two", "three"])
         target = Row(columns=[], fields=["one", "two", "three", "four"])
@@ -42,6 +76,7 @@ class TestRow(unittest.TestCase):
     def test_remove(self):
         actual = Row(columns=[], fields=["one", "two", "three", "four"])
         target = Row(columns=[], fields=["one", "two", "three"])
+        self.assertRaises(Exception, lambda *args: actual.delete(4))
         actual.delete(3)
         self.assertEqual(actual, target)
         target = Row(columns=[], fields=["one", "three"])
@@ -71,7 +106,7 @@ class TestRow(unittest.TestCase):
     def test_iter_complex(self):
         columns = []
         actual = Row(columns, fields=["one", "two", "three"])
-        Row(columns, fields=["0123", "123", "0123456"])
+        other = Row(columns, fields=["0123", "123", "0123456"])
         target = "one     two    three"
         result = ''
         for field in actual:
@@ -84,7 +119,3 @@ class TestRow(unittest.TestCase):
         Row(columns, fields=["0123", "123", "0123456"])
         self.assertEqual(len(row), 3)
         self.assertEqual(row.field(2), "three")
-        self.assertEqual(row.text_len(0), 3)
-        self.assertEqual(row.padded_field_len(2), 11)
-        self.assertEqual(row.padding_len(2), 6)
-        self.assertEqual(row.padded_field(0), "one     ")

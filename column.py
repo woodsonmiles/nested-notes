@@ -16,6 +16,7 @@ class Column(object):
             self.__field_widths[width] += 1
 
         def remove_field(self, width: int):
+            assert self.__field_widths[width] > 0
             self.__field_widths[width] -= 1
 
         @property
@@ -23,5 +24,6 @@ class Column(object):
             """
             :return: max width of all fields
             """
+            assert len(self.__field_widths) > 0
             return max(self.__field_widths.elements())
 

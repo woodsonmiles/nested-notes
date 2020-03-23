@@ -5,8 +5,8 @@ from simpleNestedList import SimpleNestedList
 
 class NestedList(SimpleNestedList):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, fields: List[str]=None, columns=None):
+        super().__init__(fields, columns)
         # are the children hidden
         self.__collapsed = False
 
@@ -41,9 +41,6 @@ class NestedList(SimpleNestedList):
                 return index
             x_coord -= ext_length
         raise IndexError("x_cord {} space out of bounds to the right".format(x_coord))
-
-    def get_selected_field(self, x_coord) -> str:
-        return self._get_field(self._get_field_index(x_coord))
 
     def __get_field_start(self, field_index: int) -> int:
         """
@@ -187,6 +184,21 @@ class NestedList(SimpleNestedList):
         self.replace_field(field_index, left_text)
         self.insert_field(field_index + 1, right_text)
 
+    def combine_fields(self, x_coord: int, direction: LateralDirection):
+        field_index = self._get_field_index(x_coord)
+        current_field = self._get_field(field_index)
+        other_field = self._get_field(field_index + direction)
+        if direction == LateralDirection.LEFT:
+            left_field = other_field
+            right_field = current_field
+            right_field_index = field_index
+        else:
+            left_field = current_field
+            right_field = other_field
+            right_field_index = field_index + direction
+        self.replace_field(right_field_index - 1, left_field+right_field)
+        self.delete_field(right_field_index)
+
     """
     Edit Node
     """
@@ -232,6 +244,10 @@ class NestedList(SimpleNestedList):
             self.delete_field(index)
         self.insert_sibling(split_fields)
 
+    def combine(self, previous_node: SimpleNestedList):
+        previous_node.insert_sibling(self.fields)
+        del self
+
     """
     def give_fields(self, prev_row, prev_sibling):
         assert prev_row is not None
@@ -245,38 +261,20 @@ class NestedList(SimpleNestedList):
             prev_row.append_field(field.get_text())
     """
 
-    def combine_fields(self, x_coord: int, direction: LateralDirection):
-        field_index = self._get_field_index(x_coord)
-        current_field = self._get_field(field_index)
-        other_field = self._get_field(field_index + direction)
-        if direction == LateralDirection.LEFT:
-            left_field = other_field
-            right_field = current_field
-            right_field_index = field_index
-        else:
-            left_field = current_field
-            right_field = other_field
-            right_field_index = field_index + direction
-        self.replace_field(right_field_index - 1, left_field+right_field)
-        self.delete_field(right_field_index)
-
-    def append_field(self, text: str):
-        self.insert_field(text, len(self.__fields))
-
 
 class NestedListIterator:
     def __init__(self, root: NestedList):
-        # fake node parenting root
-        first = NestedList.new_node("    ", level=0, first_child=root, columns=[])
+        # fake node parenting root for cleaner loop in iterator
+        first = NestedList._SimpleNestedList__new_nested_list(level=0, first_child=root, columns=[])
         self.previous: List[NestedList] = [first]
 
     def __next__(self):
-        next_node = self.previous[-1].get_child()
+        next_node = self.previous[-1].child
         if not isinstance(next_node, NullNestedList):
             self.previous.append(next_node)
             return next_node
         while len(self.previous) > 0:
-            next_node = self.previous.pop().get_sibling()
+            next_node = self.previous.pop().sibling
             if not isinstance(next_node, NullNestedList):
                 self.previous.append(next_node)
                 return next_node
@@ -331,8 +329,7 @@ class NullNestedList(NestedList):
     def level(self):
         raise Exception("Not allowed for NullRow")
 
-    @property
-    def copy_family(self):
+    def _copy_family(self):
         pass
 
     def get_last_sibling(self, stop_before=None):
