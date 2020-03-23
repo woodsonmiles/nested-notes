@@ -5,6 +5,7 @@ from column import Column
 
 class SimpleNestedList(object):
     """
+    This is an abstract class because of its self.null abstract method
     Encapsulates the column and level data
     """
 

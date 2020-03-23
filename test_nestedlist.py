@@ -27,12 +27,12 @@ class TestNestedList(unittest.TestCase):
 
     def test_new_node(self):
         root = NestedList(self.tab)
-        child = root.new_child()
-        grandchild = child.new_child()
-        child2 = child.new_sibling()
-        self.assertIs(root.get_child(), child)
-        self.assertIs(child.get_sibling(), child2)
-        self.assertIs(root.get_child().get_child(), grandchild)
+        child = root.insert_child()
+        grandchild = child.insert_child()
+        child2 = child.insert_sibling()
+        self.assertIs(root.child, child)
+        self.assertIs(child.sibling, child2)
+        self.assertIs(root.child.child, grandchild)
 
     def test_get_node(self):
         root = NestedList(self.tab)
