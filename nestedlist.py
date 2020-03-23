@@ -152,8 +152,8 @@ class NestedList(SimpleNestedList):
         """
         nodes: int = 1
         if not self.__collapsed:
-            nodes += self.__child.count()
-        nodes += self.__sibling.count()
+            nodes += self.child.count()
+        nodes += self.sibling.count()
         return nodes
 
     """

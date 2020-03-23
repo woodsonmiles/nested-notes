@@ -9,24 +9,24 @@ class TestNestedList(unittest.TestCase):
     tab = "    "
 
     def test_get_count(self):
-        root = NestedList(self.tab)
+        root = NestedList()
         self.assertEqual(root.count(), 1)
-        sibling = root.new_sibling()
+        sibling = root.insert_sibling()
         self.assertEqual(root.count(), 2)
-        child = sibling.new_child()
+        child = sibling.insert_child()
         self.assertEqual(sibling.count(), 2)
         self.assertEqual(root.count(), 3)
-        grandchild = child.new_child()
+        grandchild = child.insert_child()
         self.assertEqual(root.count(), 4)
-        grandchild2 = grandchild.new_sibling()
+        grandchild2 = grandchild.insert_sibling()
         self.assertEqual(root.count(), 5)
-        grandchild.new_sibling()
+        grandchild.insert_sibling()
         self.assertEqual(root.count(), 6)
-        child.new_sibling()
+        child.insert_sibling()
         self.assertEqual(root.count(), 7)
 
     def test_new_node(self):
-        root = NestedList(self.tab)
+        root = NestedList()
         child = root.insert_child()
         grandchild = child.insert_child()
         child2 = child.insert_sibling()
@@ -35,10 +35,10 @@ class TestNestedList(unittest.TestCase):
         self.assertIs(root.child.child, grandchild)
 
     def test_get_node(self):
-        root = NestedList(self.tab)
-        child = root.new_child()
-        grandchild = child.new_child()
-        child2 = child.new_sibling()
+        root = NestedList()
+        child = root.insert_child()
+        grandchild = child.insert_child()
+        child2 = child.insert_sibling()
         """
         root
             child
@@ -50,9 +50,9 @@ class TestNestedList(unittest.TestCase):
         self.assertIs(root.get_node(2), grandchild)
         self.assertIs(root.get_node(3), child2)
 
-        grandchild2 = grandchild.new_sibling()
-        child3 = child2.new_sibling()
-        greatgrandchild = grandchild.new_child()
+        grandchild2 = grandchild.insert_sibling()
+        child3 = child2.insert_sibling()
+        greatgrandchild = grandchild.insert_child()
         """
         root
             child
@@ -78,49 +78,49 @@ class TestNestedList(unittest.TestCase):
         root = NestedList(self.tab)
         # breakpoint()
         self.__test_iter_helper(root, [root])
-        child = root.new_child()
+        child = root.insert_child()
         self.__test_iter_helper(root, [root, child])
-        child2 = child.new_sibling()
+        child2 = child.insert_sibling()
         self.__test_iter_helper(root, [root, child, child2])
-        grandchild = child2.new_child()
+        grandchild = child2.insert_child()
         self.__test_iter_helper(root, [root, child, child2, grandchild])
-        child3 = child2.new_sibling()
+        child3 = child2.insert_sibling()
         self.__test_iter_helper(root, [root, child, child2, grandchild, child3])
-        greatgrandchild = grandchild.new_child()
+        greatgrandchild = grandchild.insert_child()
         self.__test_iter_helper(root, [root, child, child2, grandchild, greatgrandchild, child3])
-        greatgreatgrandchild = greatgrandchild.new_child()
+        greatgreatgrandchild = greatgrandchild.insert_child()
         self.__test_iter_helper(root, [root, child, child2, grandchild, greatgrandchild, greatgreatgrandchild, child3])
-        sibling2 = root.new_sibling()
-        sibling = root.new_sibling()
+        sibling2 = root.insert_sibling()
+        sibling = root.insert_sibling()
         self.__test_iter_helper(root, [root, child, child2, grandchild, greatgrandchild, greatgreatgrandchild, child3, sibling, sibling2])
 
     def test_eq(self):
         root = NestedList(tab=self.tab, fields=["01234"])
-        child = root.new_child(texts=["012", "0", "0"])
-        child.new_child(["012"])
-        child.new_sibling(["0", "0", "0123", ""])
+        child = root.insert_child(texts=["012", "0", "0"])
+        child.insert_child(["012"])
+        child.insert_sibling(["0", "0", "0123", ""])
 
         root_copy = NestedList(tab=self.tab, fields=["01234"])
-        child_copy = root_copy.new_child(texts=["012", "0", "0"])
-        child_copy.new_child(["012"])
-        child_copy.new_sibling(["0", "0", "0123", ""])
+        child_copy = root_copy.insert_child(texts=["012", "0", "0"])
+        child_copy.insert_child(["012"])
+        child_copy.insert_sibling(["0", "0", "0123", ""])
 
         self.assertEqual(root, root_copy)
 
         root_dif = NestedList(tab=self.tab, fields=["01234"])
-        child_dif = root_dif.new_child(texts=["012", "0", "0"])
-        child_dif.new_child(["012"])
-        child_dif.new_sibling(["0", "0", "0123", "9"])
+        child_dif = root_dif.insert_child(texts=["012", "0", "0"])
+        child_dif.insert_child(["012"])
+        child_dif.insert_sibling(["0", "0", "0123", "9"])
 
         self.assertNotEqual(root, root_dif)
 
     def test_unindent(self):
         root = NestedList(tab=self.tab, fields=["root"])
-        child = root.new_child(texts=["child"])
-        child2 = child.new_sibling(["child2"])
-        grandchild = child2.new_child(["grandchild"])
-        child3 = child2.new_sibling(["child3"])
-        child3.new_child(["grandchild2"])
+        child = root.insert_child(texts=["child"])
+        child2 = child.insert_sibling(["child2"])
+        grandchild = child2.insert_child(["grandchild"])
+        child3 = child2.insert_sibling(["child3"])
+        child3.insert_child(["grandchild2"])
         """
         root
             child
@@ -131,11 +131,11 @@ class TestNestedList(unittest.TestCase):
         """
         # Indent child
         target_root = NestedList(tab=self.tab, fields=["root"])
-        target_child = target_root.new_sibling(texts=["child"])
-        target_child2 = target_child.new_child(["child2"])
-        target_child2.new_child(["grandchild"])
-        target_child3 = target_child2.new_sibling(["child3"])
-        target_child3.new_child(["grandchild2"])
+        target_child = target_root.insert_sibling(texts=["child"])
+        target_child2 = target_child.insert_child(["child2"])
+        target_child2.insert_child(["grandchild"])
+        target_child3 = target_child2.insert_sibling(["child3"])
+        target_child3.insert_child(["grandchild2"])
         """
         root
         child
@@ -149,11 +149,11 @@ class TestNestedList(unittest.TestCase):
 
         # Indent child 2
         target_root = NestedList(tab=self.tab, fields=["root"])
-        target_child = target_root.new_sibling(texts=["child"])
-        target_child2 = target_child.new_sibling(["child2"])
-        target_grandchild = target_child2.new_child(["grandchild"])
-        target_child3 = target_grandchild.new_sibling(["child3"])
-        target_child3.new_child(["grandchild2"])
+        target_child = target_root.insert_sibling(texts=["child"])
+        target_child2 = target_child.insert_sibling(["child2"])
+        target_grandchild = target_child2.insert_child(["grandchild"])
+        target_child3 = target_grandchild.insert_sibling(["child3"])
+        target_child3.insert_child(["grandchild2"])
         """
         root
         child
@@ -167,11 +167,11 @@ class TestNestedList(unittest.TestCase):
 
         # Indent child3
         target_root = NestedList(tab=self.tab, fields=["root"])
-        target_child = target_root.new_sibling(texts=["child"])
-        target_child2 = target_child.new_sibling(["child2"])
-        target_child2.new_child(["grandchild"])
-        target_child3 = target_child2.new_sibling(["child3"])
-        target_child3.new_child(["grandchild2"])
+        target_child = target_root.insert_sibling(texts=["child"])
+        target_child2 = target_child.insert_sibling(["child2"])
+        target_child2.insert_child(["grandchild"])
+        target_child3 = target_child2.insert_sibling(["child3"])
+        target_child3.insert_child(["grandchild2"])
         """
         root
         child
