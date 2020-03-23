@@ -19,6 +19,12 @@ class TestSimpleNestedList(unittest.TestCase):
         diff.insert_sibling()
         self.assertNotEqual(root, diff)
 
+    def test_columns(self):
+        one = SimpleNestedList(["567"])
+        self.assertEqual(one.width, 7)
+        two = one.insert_sibling(["56789"])
+        self.assertEqaul(one.width, 7)
+
 
 if __name__ == '__main__':
     unittest.main()
