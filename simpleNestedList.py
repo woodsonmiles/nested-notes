@@ -113,7 +113,7 @@ class SimpleNestedList(object):
     def append_child(self, texts: List[str] = None):
         """
         Adds new child as the last child under this
-        :param new_child: The NestedList to append
+        :param texts: fields to appear in the new child
         """
         if self.__child is self.null:
             self.insert_child(texts)
