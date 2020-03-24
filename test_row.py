@@ -49,9 +49,9 @@ class TestRow(unittest.TestCase):
         self.__test_columns_helper([two], [7, 6, 5])
         four.insert(2, "5678")
         self.__test_columns_helper([two], [7, 6, 8])
-        four.delete(0)
+        four.remove(0)
         self.__test_columns_helper([two], [6, 8, 5])
-        four.delete(1)
+        four.remove(1)
         self.__test_columns_helper([two], [6, 5, 5])
 
     def __test_columns_helper(self, rows: List[Row], target_lengths: List[int]):
@@ -76,14 +76,14 @@ class TestRow(unittest.TestCase):
     def test_remove(self):
         actual = Row(columns=[], fields=["one", "two", "three", "four"])
         target = Row(columns=[], fields=["one", "two", "three"])
-        self.assertRaises(Exception, lambda *args: actual.delete(4))
-        actual.delete(3)
+        self.assertRaises(Exception, lambda *args: actual.remove(4))
+        actual.remove(3)
         self.assertEqual(actual, target)
         target = Row(columns=[], fields=["one", "three"])
-        actual.delete(1)
+        actual.remove(1)
         self.assertEqual(actual, target)
         target = Row(columns=[], fields=["three"])
-        actual.delete(0)
+        actual.remove(0)
         self.assertEqual(actual, target)
 
     def test_replace(self):

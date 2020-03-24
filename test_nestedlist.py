@@ -6,7 +6,8 @@ from typing import List
 
 class TestNestedList(unittest.TestCase):
 
-    tab = "    "
+    def test_init(self):
+        root = NestedList()
 
     def test_get_count(self):
         root = NestedList()

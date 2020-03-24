@@ -46,7 +46,7 @@ class SimpleNestedList(object):
         return node
 
     def __del__(self):
-        del self._columns
+        del self.__row
 
     @property
     def null(self):
@@ -60,12 +60,6 @@ class SimpleNestedList(object):
         """
         # TODO make an inner class node and use decorator getters and setters
         return self.__columns
-
-    @_columns.deleter
-    def _columns(self):
-        # called when node is deleted
-        # TODO
-        self.__row.delete()
 
     @property
     def level(self):
@@ -161,7 +155,7 @@ class SimpleNestedList(object):
         self.__row.insert(index, text)
 
     def delete_field(self, index):
-        self.__row.delete(index)
+        self.__row.remove(index)
 
     def replace_field(self, index: int, replacement: str):
         self.__row.replace(index, replacement)

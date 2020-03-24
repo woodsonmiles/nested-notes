@@ -43,7 +43,7 @@ class Row(object):
         """
         self.__detach_columns()
 
-    def delete(self, index):
+    def remove(self, index):
         """
         Delete the field at index and update related column
         """
