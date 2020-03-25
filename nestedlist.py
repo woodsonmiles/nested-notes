@@ -5,10 +5,14 @@ from simpleNestedList import SimpleNestedList
 
 class NestedList(SimpleNestedList):
 
-    def __init__(self, fields: List[str]=None, columns=None):
+    def __init__(self, fields: List[str] = None, columns=None):
         super().__init__(fields, columns)
         # are the children hidden
         self.__collapsed = False
+
+    @staticmethod
+    def _polymorphic_init(fields: List[str] = None, columns=None):
+        return NestedList(fields, columns)
 
     def __str__(self) -> str:
         """
@@ -18,9 +22,9 @@ class NestedList(SimpleNestedList):
         to_return = self.indent_padding
         for text in self.row_iter:
             to_return += text
-        to_return += "\n"
-        to_return += str(self.child)
-        to_return += str(self.sibling)
+        family = str(self.child) + str(self.sibling)
+        if family != '':
+            to_return += "\n" + family
         return to_return
 
     def __iter__(self):
@@ -217,18 +221,18 @@ class NestedList(SimpleNestedList):
         """
         assert parent is not self.null
         new_self = parent.insert_sibling(self.fields)
-        new_self._copy_family(self)
-        del self
+        self.child._insert_child_deep(new_self)
+        del parent.child
 
-    def _copy_family(self, copy_from):
-        """
-        recursively copies the children and siblings from copy_from onto self
-        :param copy_from:
-        """
-        self.insert_sibling(copy_from.sibling.fields)
-        self.sibling._copy_family(copy_from.sibling)
-        self.insert_child(copy_from.child.fields)
-        self.child._copy_family(copy_from.child)
+    def _insert_child_deep(self, parent):
+        new_child = parent.insert_child(self.fields)
+        self.child._insert_child_deep(parent=new_child)
+        self.sibling._insert_sibling_deep(prev_sibling=new_child)
+
+    def _insert_sibling_deep(self, prev_sibling):
+        new_sibling = prev_sibling.insert_sibling(self.fields)
+        self.child._insert_child_deep(parent=new_sibling)
+        self.sibling._insert_sibling_deep(prev_sibling=new_sibling)
 
     def split(self, x_coord: int):
         """
@@ -264,8 +268,20 @@ class NestedList(SimpleNestedList):
 
 class NestedListIterator:
     def __init__(self, root: NestedList):
+        class FakeNestedList(object):
+            def __init__(self, child):
+                self.__child = child
+
+            @property
+            def child(self):
+                return self.__child
+
+            @property
+            def sibling(self):
+                return NullNestedList.get_instance()
+
         # fake node parenting root for cleaner loop in iterator
-        first = NestedList._SimpleNestedList__new_nested_list(level=0, first_child=root, columns=[])
+        first = FakeNestedList(root)
         self.previous: List[NestedList] = [first]
 
     def __next__(self):
@@ -318,6 +334,10 @@ class NullNestedList(NestedList):
         return []
 
     @property
+    def fields(self) -> List[str]:
+        raise Exception("Not allowed for NullRow")
+
+    @property
     def child(self):
         return self
 
@@ -329,7 +349,16 @@ class NullNestedList(NestedList):
     def level(self):
         raise Exception("Not allowed for NullRow")
 
-    def _copy_family(self):
+    def _copy_family(selfi, self):
+        pass
+
+    def _insert_child_deep(self, parent):
+        pass
+
+    def _insert_sibling_deep(self, prev_sibling):
+        pass
+
+    def __del__(self):
         pass
 
     def get_last_sibling(self, stop_before=None):

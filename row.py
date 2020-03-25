@@ -131,6 +131,9 @@ class Row(object):
                 self.__index = 0
                 self.__row = row
 
+            def __iter__(self):
+                return self
+
             def __next__(self):
                 if self.__index < len(self.__row) - 1:
                     # pad all but last field

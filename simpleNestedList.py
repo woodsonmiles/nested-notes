@@ -29,15 +29,26 @@ class SimpleNestedList(object):
         # indentation level
         self.__level = 0
 
+    @staticmethod
+    def _polymorphic_init(fields: List[str] = None, columns: List[Column] = None):
+        """
+        For polymorphic instantiation used by new_nested_list
+        Should be overriden to return an instance of whatever subclass of SimpleNestedList calls this.
+        :return: subclass of SimpleNestedList
+        """
+        return SimpleNestedList(fields, columns)
+
     @classmethod
     def _new_nested_list(cls, level: int, columns: List[Column], fields: List[str] = None,
                          next_sibling=None, first_child=None):
         """
+        Virtual private constructor
+        Depends upon the overriding of the polymorphic_init method
         :return: new NestedList
         """
         if fields is None:
             fields = []
-        node = cls.__init__(fields, columns)
+        node = cls._polymorphic_init(fields, columns)
         node.__level = level
         if next_sibling is not None:
             node.__sibling = next_sibling
@@ -80,9 +91,9 @@ class SimpleNestedList(object):
         Deletes the sibling row only, not its children or siblings
         Removes row references and
         """
-        # TODO repair links and remove fields from columns
-        del self.sibling.columns
-        self.append_child(self.sibling.child)
+        nephiew = self.sibling.child
+        if nephiew is not self.null:
+            self.append_child(self.sibling.child.fields)
         self.__sibling = self.sibling.sibling
 
     def insert_sibling(self, texts: List[str] = None):
@@ -101,8 +112,6 @@ class SimpleNestedList(object):
         """
         Deletes the child row only, not its children or siblings
         """
-        # TODO repair links and remove fields from columns
-        del self.child.columns
         self.__child = self.child.sibling
 
     def append_child(self, texts: List[str] = None):
@@ -167,4 +176,10 @@ class SimpleNestedList(object):
         """
         return self.__row.field(index)
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, SimpleNestedList):
+            return False
+        return self.__row == other.__row and \
+            self.child == other.child and \
+            self.sibling == other.sibling
 

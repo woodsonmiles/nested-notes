@@ -6,8 +6,62 @@ from typing import List
 
 class TestNestedList(unittest.TestCase):
 
-    def test_init(self):
+    def test_instantiation(self):
         root = NestedList()
+        self.assertTrue(isinstance(root, NestedList))
+        child = root.insert_child()
+        self.assertTrue(isinstance(child, NestedList))
+        sibling = root.insert_sibling()
+        self.assertTrue(isinstance(sibling, NestedList))
+
+    def test_row_iter(self):
+        root = NestedList(["1", "2", "3"])
+        result = ''
+        for field in root.row_iter:
+            result += field
+        target = "1    2    3"
+        self.assertEqual(result, target)
+
+    def test_delete(self):
+        root = NestedList(["root"])
+        root.insert_sibling(["sib"])
+        del root.sibling
+        target = NestedList(["root"])
+        self.assertEqual(root, target)
+        root.insert_child(["child"])
+        del root.child
+        self.assertEqual(root, target)
+        root.insert_child(["child1"])
+        root.insert_child(["child2"])
+        del root.child
+        target.insert_child(["child1"])
+        self.assertEqual(root, target)
+
+    def test_str(self):
+        root = NestedList(["123", "1"])
+        target = "123    1"
+        self.assertEqual(str(root), target)
+        root.insert_child(["1234"])
+        target += "\n    1234"
+        self.assertEqual(str(root), target)
+        root.insert_sibling(["12"])
+        target += "\n12"
+
+    def test_columns(self):
+        root = NestedList(["123", "1"])
+        target = "123    1"
+        self.__comp_str_to_node(root, target)
+        root.insert_sibling(["1234"])
+        target = "123     1"
+        target += "\n1234"
+        self.__comp_str_to_node(root, target)
+        del root.sibling
+        target = "123    1"
+        self.__comp_str_to_node(root, target)
+
+    def __comp_str_to_node(self, root: NestedList, target: str):
+        actual = str(root)
+        self.assertEqual(actual, target)
 
     def test_get_count(self):
         root = NestedList()
@@ -71,12 +125,12 @@ class TestNestedList(unittest.TestCase):
         self.assertIs(root.get_node(5), child2)
         self.assertIs(root.get_node(6), child3)
 
-    def __test_iter_helper(self, root: NestedList,  targets: List[NestedList]):
+    def __test_iter_helper(self, root: NestedList, targets: List[NestedList]):
         for index, actual in enumerate(root):
             self.assertIs(actual, targets[index])
 
     def test_iter(self):
-        root = NestedList(self.tab)
+        root = NestedList()
         # breakpoint()
         self.__test_iter_helper(root, [root])
         child = root.insert_child()
@@ -93,96 +147,95 @@ class TestNestedList(unittest.TestCase):
         self.__test_iter_helper(root, [root, child, child2, grandchild, greatgrandchild, greatgreatgrandchild, child3])
         sibling2 = root.insert_sibling()
         sibling = root.insert_sibling()
-        self.__test_iter_helper(root, [root, child, child2, grandchild, greatgrandchild, greatgreatgrandchild, child3, sibling, sibling2])
+        self.__test_iter_helper(root, [root, child, child2, grandchild, greatgrandchild, greatgreatgrandchild, child3,
+                                       sibling, sibling2])
+
+    def test_eq_simple(self):
+        root = NestedList(fields=["01234"])
+        self.assertEqual(root, root)
+        other = NestedList(fields=["01234"])
+        self.assertEqual(root, other)
 
     def test_eq(self):
-        root = NestedList(tab=self.tab, fields=["01234"])
+        root = NestedList(fields=["01234"])
         child = root.insert_child(texts=["012", "0", "0"])
         child.insert_child(["012"])
         child.insert_sibling(["0", "0", "0123", ""])
 
-        root_copy = NestedList(tab=self.tab, fields=["01234"])
+        root_copy = NestedList(fields=["01234"])
         child_copy = root_copy.insert_child(texts=["012", "0", "0"])
         child_copy.insert_child(["012"])
         child_copy.insert_sibling(["0", "0", "0123", ""])
 
         self.assertEqual(root, root_copy)
 
-        root_dif = NestedList(tab=self.tab, fields=["01234"])
+        root_dif = NestedList(fields=["01234"])
         child_dif = root_dif.insert_child(texts=["012", "0", "0"])
         child_dif.insert_child(["012"])
         child_dif.insert_sibling(["0", "0", "0123", "9"])
 
         self.assertNotEqual(root, root_dif)
 
+    def test_unindent_simple(self):
+        root = NestedList(["root"])
+        child = root.insert_child(["child"])
+        child.unindent(root)
+        target = NestedList(["root"])
+        target.insert_sibling(["child"])
+        self.assertEqual(root, target)
+
     def test_unindent(self):
-        root = NestedList(tab=self.tab, fields=["root"])
+        root = NestedList(["root"])
+        child = root.insert_child(["child"])
+        child.insert_child(["grandchild"])
+        child.unindent(root)
+        target = NestedList(["root"])
+        sibling = target.insert_sibling(["child"])
+        sibling.insert_child(["grandchild"])
+        self.assertEqual(root, target)
+
+    def test_unindent_complex(self):
+        root = NestedList(fields=["root"])
         child = root.insert_child(texts=["child"])
         child2 = child.insert_sibling(["child2"])
         grandchild = child2.insert_child(["grandchild"])
         child3 = child2.insert_sibling(["child3"])
         child3.insert_child(["grandchild2"])
-        """
-        root
-            child
-            child2
-                grandchild
-            child3
-                grandchild2
-        """
-        # Indent child
-        target_root = NestedList(tab=self.tab, fields=["root"])
-        target_child = target_root.insert_sibling(texts=["child"])
-        target_child2 = target_child.insert_child(["child2"])
-        target_child2.insert_child(["grandchild"])
-        target_child3 = target_child2.insert_sibling(["child3"])
-        target_child3.insert_child(["grandchild2"])
-        """
-        root
-        child
-            child2
-                grandchild
-            child3
-                grandchild2
-        """
-        child.unindent(parent=root, prev_sibling=NullNestedList.get_instance())
-        self.assertEqual(root, target_root)
 
-        # Indent child 2
-        target_root = NestedList(tab=self.tab, fields=["root"])
-        target_child = target_root.insert_sibling(texts=["child"])
-        target_child2 = target_child.insert_sibling(["child2"])
-        target_grandchild = target_child2.insert_child(["grandchild"])
-        target_child3 = target_grandchild.insert_sibling(["child3"])
-        target_child3.insert_child(["grandchild2"])
-        """
-        root
-        child
-        child2
-            grandchild
-            child3
-                grandchild2
-        """
-        child2.unindent(parent=child, prev_sibling=NullNestedList.get_instance())
-        self.assertEqual(root, target_root)
+        target =     "root" \
+                 + "\n    child" \
+                 + "\n    child2" \
+                 + "\n        grandchild" \
+                 + "\n    child3" \
+                 + "\n        grandchild2"
+        self.__comp_str_to_node(root, target)
 
-        # Indent child3
-        target_root = NestedList(tab=self.tab, fields=["root"])
-        target_child = target_root.insert_sibling(texts=["child"])
-        target_child2 = target_child.insert_sibling(["child2"])
-        target_child2.insert_child(["grandchild"])
-        target_child3 = target_child2.insert_sibling(["child3"])
-        target_child3.insert_child(["grandchild2"])
-        """
-        root
-        child
-        child2
-            grandchild
-        child3
-            grandchild2
-        """
-        child3.unindent(parent=child2, prev_sibling=grandchild)
-        self.assertEqual(root, target_root)
+        child.unindent(parent=root)
+        target =     "root" \
+                 + "\nchild" \
+                 + "\n    child2" \
+                 + "\n        grandchild" \
+                 + "\n    child3" \
+                 + "\n        grandchild2"
+        self.__comp_str_to_node(root, target)
+
+        child2.unindent(parent=child)
+        target =     "root" \
+                 + "\nchild" \
+                 + "\nchild2" \
+                 + "\n    grandchild" \
+                 + "\n    child3" \
+                 + "\n        grandchild2"
+        self.__comp_str_to_node(root, target)
+
+        child3.unindent(parent=child2)
+        target =     "root" \
+                 + "\nchild" \
+                 + "\nchild2" \
+                 + "\n    grandchild" \
+                 + "\nchild3" \
+                 + "\n    grandchild2"
+        self.__comp_str_to_node(root, target)
 
 
 if __name__ == '__main__':
