@@ -52,17 +52,19 @@ class Model(object):
         root.insert_child(["Subject", "Good", "Bean-like", "Squidgely", "Grumpy", "Cookery"])
         return root
 
+    @property
     def __bottom(self) -> int:
         """Index of last line currently on screen"""
         return self.__top + self.__window_rows
 
+    @property
     def __abs_cursor_y(self):
         """y axis index of cursor within lines (not screen)"""
         return self.__cursor_y + self.__top
 
     def __get_node(self, offset: int = 0, start: int = None):
         if start is None:
-            start = self.__abs_cursor_y()
+            start = self.__abs_cursor_y
         return self.__root.get_node(start + offset)
 
     def getch(self) -> int:
@@ -94,7 +96,7 @@ class Model(object):
                     or self.__cursor_y == self.__window_rows - 1 and direction == VerticalDirection.DOWN:
                 # if moving past top or bottom of screen
                 self.scroll(direction)
-            elif direction == VerticalDirection.UP or self.__abs_cursor_y() < self.__root.count() - 1:
+            elif direction == VerticalDirection.UP or self.__abs_cursor_y < self.__root.count() - 1:
                 # not moving past bottom of buffer
                 self.__cursor_y += direction * num_spaces
         self.__correct_lateral_bounds()
@@ -109,7 +111,7 @@ class Model(object):
         """
         # if not at top or bottom of lines
         if direction == VerticalDirection.UP and self.__top > 0 \
-                or direction == VerticalDirection.DOWN and self.__root.count() > self.__bottom():
+                or direction == VerticalDirection.DOWN and self.__root.count() > self.__bottom:
             self.__top += direction
 
     def page(self, direction: VerticalDirection):
@@ -188,11 +190,19 @@ class Model(object):
     #    return self.__get_node().__get_index_in_field(self.__cursor_x)
 
     def insert(self, insertion: str):
+        """
+        Insert a string into the current field of the current node
+        :param insertion: The string to insert
+        """
         node: NestedList = self.__get_node()
         node.insert(self.__cursor_x, insertion)
-        self.__cursor_x += 1
+        self.__cursor_x += len(insertion)
 
     def delete(self, x_coord_offset: int):
+        """
+        Delete the character at the given position
+        :param x_coord_offset: the offset from the x_coord of the cursor
+        """
         node: NestedList = self.__get_node()
         node.delete_char_at(self.__cursor_x + x_coord_offset)
         self.__cursor_x += x_coord_offset
@@ -206,7 +216,7 @@ class Model(object):
         if current is self.__root:
             return False
         previous: NestedList = self.__get_node(-1)
-        return previous.get_child() is current
+        return previous.child is current
 
     def indent_current_node(self):
         """
@@ -214,7 +224,7 @@ class Model(object):
         """
         previous: NestedList = self.get_previous_sibling()
         node: NestedList = self.__get_node()
-        node.indent_padding(previous)
+        node.indent(previous)
         self.__cursor_x += len(self.__tab)
 
     def unindent_current_node(self):
@@ -225,7 +235,7 @@ class Model(object):
 
     def get_previous_sibling(self) -> NestedList:
         """
-        Precondition: must not be first child or root
+        :precondition: must not be first child or root
         :return: The previous sibling of the current node
         """
         level = self.__get_node().get_level()
@@ -273,18 +283,6 @@ class Model(object):
         node.combine(prev_row)
         self.move(LateralDirection.RIGHT, self.get_padding_len())
 
-    def get_text_len(self) -> int:
-        """
-        :return: The length of the text of the current field
-        """
-        return self.__get_node().get_text_len(self.__cursor_x)
-
-    def get_neighbor_text_len(self, direction: LateralDirection) -> int:
-        """
-        :return: The length of the text of the current field
-        """
-        return self.__get_node().get_neighbor_text_len(self.__cursor_x, direction=direction)
-
     def get_column_width(self) -> int:
         """
         :return: The width of the column at this field
@@ -314,5 +312,5 @@ class Model(object):
         self.__view.signal_user_error()
 
     def get_level(self) -> int:
-        return self.__get_node().get_level()
+        return self.__get_node().level
 

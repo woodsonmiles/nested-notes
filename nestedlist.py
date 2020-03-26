@@ -22,9 +22,9 @@ class NestedList(SimpleNestedList):
         to_return = self.indent_padding
         for text in self.row_iter:
             to_return += text
-        family = str(self.child) + str(self.sibling)
-        if family != '':
-            to_return += "\n" + family
+        to_return += '\n'
+        to_return += str(self.child)
+        to_return += str(self.sibling)
         return to_return
 
     def __iter__(self):
@@ -33,7 +33,7 @@ class NestedList(SimpleNestedList):
     def __len__(self) -> int:
         raise Exception("This used to mean width")
 
-    def _get_field_index(self, x_coord: int) -> int:
+    def get_field_index(self, x_coord: int) -> int:
         """
         :param x_coord:
         :return: index of field that the x_coordinate falls within
@@ -60,7 +60,7 @@ class NestedList(SimpleNestedList):
         raise Exception("Unreachable")
 
     def get_selected_field_start(self, x_coord: int) -> int:
-        field_index = self._get_field_index(x_coord)
+        field_index = self.get_field_index(x_coord)
         return self.__get_field_start(field_index)
 
     def __get_field_end(self, field_index: int) -> int:
@@ -69,10 +69,10 @@ class NestedList(SimpleNestedList):
         :return: The x-coord of the end of the field at the given index
         """
         start = self.__get_field_start(field_index)
-        return start + len(self._get_field(field_index))
+        return start + len(self.get_field(field_index))
 
     def get_selected_field_end(self, x_coord: int) -> int:
-        field_index = self._get_field_index(x_coord)
+        field_index = self.get_field_index(x_coord)
         return self.__get_field_end(field_index)
 
     def __get_index_in_field(self, x_coord: int) -> int:
@@ -96,16 +96,18 @@ class NestedList(SimpleNestedList):
     def null(self):
         return NullNestedList.get_instance()
 
-    def get_last_sibling(self):
+    @property
+    def last_sibling(self):
         """
         :return: Last sibling on this level of a nested list
         """
         if self.sibling is self.null:
             return self
-        return self.sibling.get_last_sibling()
+        return self.sibling.last_sibling
 
-    def get_last_child(self):
-        return self.__child.get_last_sibling()
+    @property
+    def last_child(self):
+        return self.child.last_sibling
 
     """
     def get_text_len(self, x_coord: int) -> int:
@@ -166,22 +168,22 @@ class NestedList(SimpleNestedList):
 
     def insert(self, x_coord, insertion: str):
         """inserts a string into a pre-existing field"""
-        field_index = self._get_field_index(x_coord)
-        field: str = self._get_field(field_index)
+        field_index = self.get_field_index(x_coord)
+        field: str = self.get_field(field_index)
         index = self.__get_index_in_field(x_coord)
         new_text = field[0:index] + insertion + field[index:len(field)]
         self.replace_field(field_index, new_text)
 
     def delete_char_at(self, x_coord: int):
-        field_index = self._get_field_index(x_coord)
-        field: str = self._get_field(field_index)
+        field_index = self.get_field_index(x_coord)
+        field: str = self.get_field(field_index)
         index = self.__get_index_in_field(x_coord)
         new_text = field[0:index] + field[index + 1:len(field)]
         self.replace_field(field_index, new_text)
 
     def split_field(self, x_coord: int):
-        field_index = self._get_field_index(x_coord)
-        field_to_split = self._get_field(field_index)
+        field_index = self.get_field_index(x_coord)
+        field_to_split = self.get_field(field_index)
         split_index = self.__get_index_in_field(x_coord)
         left_text = field_to_split[0:split_index]
         right_text = field_to_split[split_index:]
@@ -189,9 +191,9 @@ class NestedList(SimpleNestedList):
         self.insert_field(field_index + 1, right_text)
 
     def combine_fields(self, x_coord: int, direction: LateralDirection):
-        field_index = self._get_field_index(x_coord)
-        current_field = self._get_field(field_index)
-        other_field = self._get_field(field_index + direction)
+        field_index = self.get_field_index(x_coord)
+        current_field = self.get_field(field_index)
+        other_field = self.get_field(field_index + direction)
         if direction == LateralDirection.LEFT:
             left_field = other_field
             right_field = current_field
@@ -221,18 +223,73 @@ class NestedList(SimpleNestedList):
         """
         assert parent is not self.null
         new_self = parent.insert_sibling(self.fields)
-        self.child._insert_child_deep(new_self)
-        del parent.child
+        new_self._insert_child_deep(self.child)
+        # append sibling family onto child
+        new_self._append_child_deep(self.sibling)
 
-    def _insert_child_deep(self, parent):
-        new_child = parent.insert_child(self.fields)
-        self.child._insert_child_deep(parent=new_child)
-        self.sibling._insert_sibling_deep(prev_sibling=new_child)
+        # delete old reference
+        if parent.child is self:
+            del parent.child
+        else:
+            child = parent.child
+            next_child = child.sibling
+            while next_child is not self:
+                child = next_child
+                next_child = child.sibling
+            # delete reference to self and all descendants
+            del child.sibling.child
+            del child.sibling
 
-    def _insert_sibling_deep(self, prev_sibling):
-        new_sibling = prev_sibling.insert_sibling(self.fields)
-        self.child._insert_child_deep(parent=new_sibling)
-        self.sibling._insert_sibling_deep(prev_sibling=new_sibling)
+    def _attach_to_parent(self, parent):
+        """
+        Reverse of insert_child, used to allow NullNestedList to polymophically handle child insertion
+        differently.
+        Inserts the fields of self into the context of parent
+        Use instead of insert_child when you want the insertion to only happen if self is not null
+        :param parent: node to insert self under
+        :return: The new instance of self that is now attached to prev_sibling
+        """
+        return parent.insert_child(self.fields)
+
+    def _attach_to_prev_sibling(self, prev_sibling):
+        """
+        Reverse of insert_sibling, used to allow NullNestedList to polymophically handle sibling insertion
+        differently.
+        Inserts the fields of self into the context of prev_sibling
+        Use instead of insert_sibling when you want the insertion to only happen if self is not null
+        :param prev_sibling: node to insert self under
+        :return: The new instance of self that is now attached to prev_sibling
+        """
+        return prev_sibling.insert_sibling(self.fields)
+
+    def _insert_sibling_deep(self, sibling):
+        """
+        Inserts a nestedList node and all its descendants as a sibling under self
+        :param sibling:
+        """
+        new_sibling = sibling._attach_to_prev_sibling(prev_sibling=self)
+        new_sibling._insert_child_deep(sibling.child)
+        new_sibling._insert_sibling_deep(sibling.sibling)
+
+    def _append_child_deep(self, new_child):
+        """
+        Inserts a nestedList node and all its descendants as a child under self's last child
+        :param child: node whose fields and descendants are to be inserted as a new nestedlist under
+        self's last child
+        """
+        if self.child is self.null:
+            self._insert_child_deep(new_child)
+        else:
+            self.last_child._insert_sibling_deep(new_child)
+
+    def _insert_child_deep(self, child):
+        """
+        Inserts a nestedList node and all its descendants as a child under self
+        :param child: node whose fields and descendants are to be inserted as a new nestedlist under self
+        """
+        new_child = child._attach_to_parent(parent=self)
+        new_child._insert_child_deep(child.child)
+        new_child._insert_sibling_deep(child.sibling)
 
     def split(self, x_coord: int):
         """
@@ -241,7 +298,7 @@ class NestedList(SimpleNestedList):
         Does not split the field itself, only the row
         :param x_coord: The row is split at the field containing the x_coord
         """
-        field_index = self._get_field_index(x_coord)
+        field_index = self.get_field_index(x_coord)
         split_fields: List[str] = []
         for index, field in enumerate(self.row_iter, start = field_index):
             split_fields.append(field)
@@ -349,10 +406,20 @@ class NullNestedList(NestedList):
     def level(self):
         raise Exception("Not allowed for NullRow")
 
-    def _copy_family(selfi, self):
-        pass
+    @property
+    def last_sibling(self):
+        raise Exception("Should not be called on NullNestedList")
+
+    def _attach_to_parent(self, parent):
+        return self
+
+    def _attach_to_prev_sibling(self, prev_sibling):
+        return self
 
     def _insert_child_deep(self, parent):
+        pass
+
+    def _append_child_deep(self, new_child):
         pass
 
     def _insert_sibling_deep(self, prev_sibling):
@@ -360,9 +427,6 @@ class NullNestedList(NestedList):
 
     def __del__(self):
         pass
-
-    def get_last_sibling(self, stop_before=None):
-        return self
 
     def get_last_child(self, stop_before=None):
         raise Exception("Should not be called on a NullNestedList")
@@ -373,16 +437,18 @@ class NullNestedList(NestedList):
     def count(self) -> int:
         return 0
 
-    def new_child(self, texts: List[str] = None):
+    def insert_child(self, texts: List[str] = None):
         raise Exception("Should not be called on a NullNestedList")
 
-    def new_sibling(self, fields: List[str] = None):
+    def insert_sibling(self, fields: List[str] = None):
         raise Exception("Should not be called on a NullNestedList")
 
-    def delete_first_child(self):
+    @child.deleter
+    def child(self):
         raise Exception("Should not be called on a NullNestedList")
 
-    def delete_next_sibling(self):
+    @sibling.deleter
+    def sibling(self):
         raise Exception("Should not be called on a NullNestedList")
 
     def insert(self, x_coord, insertion: str):

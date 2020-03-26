@@ -59,10 +59,18 @@ class SimpleNestedList(object):
     def __del__(self):
         del self.__row
 
+    # Abstract properties
+
     @property
     def null(self):
-        raise Exception("Implemented by subclass")
+        raise Exception("Abstract property")
         # return _NullSimpleNestedList.getInstance()
+
+    @property
+    def last_sibling(self):
+        raise Exception("Abstract property")
+
+    # Properties
 
     @property
     def _columns(self):
@@ -89,7 +97,7 @@ class SimpleNestedList(object):
     def sibling(self):
         """
         Deletes the sibling row only, not its children or siblings
-        Removes row references and
+        The sibling is replaces by this.sibling.sibling
         """
         nephiew = self.sibling.child
         if nephiew is not self.null:
@@ -110,9 +118,9 @@ class SimpleNestedList(object):
     @child.deleter
     def child(self):
         """
-        Deletes the child row only, not its children or siblings
+        Deletes the child row and all descendants recursively
         """
-        self.__child = self.child.sibling
+        self.__child = self.null
 
     def append_child(self, texts: List[str] = None):
         """
@@ -122,7 +130,7 @@ class SimpleNestedList(object):
         if self.__child is self.null:
             self.insert_child(texts)
         else:
-            last_child = self.__child.get_last_sibling()
+            last_child = self.__child.last_sibling
             last_child.insert_sibling(texts)
 
     def insert_child(self, texts: List[str] = None):
@@ -169,12 +177,11 @@ class SimpleNestedList(object):
     def replace_field(self, index: int, replacement: str):
         self.__row.replace(index, replacement)
 
-    def _get_field(self, index: int) -> str:
-        """
-        :param index:
-        :return: Unpadded field at index
-        """
+    def get_field(self, index: int) -> str:
         return self.__row.field(index)
+
+    def get_padded_field(self, index: int) -> str:
+        return self.__row.padded_field(index)
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, SimpleNestedList):

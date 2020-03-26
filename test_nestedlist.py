@@ -47,6 +47,23 @@ class TestNestedList(unittest.TestCase):
         root.insert_sibling(["12"])
         target += "\n12"
 
+    def test_str_complex(self):
+        root = NestedList(fields=["root"])
+        child = root.insert_child(texts=["child"])
+        child2 = child.insert_sibling(["child2"])
+        grandchild = child2.insert_child(["grandchild"])
+        child3 = child2.insert_sibling(["child3"])
+        child3.insert_child(["grandchild2"])
+
+        target =     "root" \
+                 + "\n    child" \
+                 + "\n    child2" \
+                 + "\n        grandchild" \
+                 + "\n    child3" \
+                 + "\n        grandchild2" \
+                 + "\n"
+        self.__comp_str_to_node(root, target)
+
     def test_columns(self):
         root = NestedList(["123", "1"])
         target = "123    1"
@@ -195,47 +212,62 @@ class TestNestedList(unittest.TestCase):
         self.assertEqual(root, target)
 
     def test_unindent_complex(self):
-        root = NestedList(fields=["root"])
-        child = root.insert_child(texts=["child"])
-        child2 = child.insert_sibling(["child2"])
-        grandchild = child2.insert_child(["grandchild"])
-        child3 = child2.insert_sibling(["child3"])
-        child3.insert_child(["grandchild2"])
+        one = NestedList(fields=["one"])
+        two = one.insert_child(texts=["two"])
+        three = two.insert_sibling(["three"])
+        three.insert_child(["four"])
+        five = three.insert_sibling(["five"])
+        five.insert_child(["six"])
 
-        target =     "root" \
-                 + "\n    child" \
-                 + "\n    child2" \
-                 + "\n        grandchild" \
-                 + "\n    child3" \
-                 + "\n        grandchild2"
-        self.__comp_str_to_node(root, target)
+        target =     "one" \
+                 + "\n    two" \
+                 + "\n    three" \
+                 + "\n        four" \
+                 + "\n    five" \
+                 + "\n        six" \
+                 + "\n"
+        self.__comp_str_to_node(one, target)
 
-        child.unindent(parent=root)
-        target =     "root" \
-                 + "\nchild" \
-                 + "\n    child2" \
-                 + "\n        grandchild" \
-                 + "\n    child3" \
-                 + "\n        grandchild2"
-        self.__comp_str_to_node(root, target)
+        two.unindent(parent=one)
+        target =     "one" \
+                 + "\ntwo" \
+                 + "\n    three" \
+                 + "\n        four" \
+                 + "\n    five" \
+                 + "\n        six" \
+                 + "\n"
+        self.__comp_str_to_node(one, target)
+        # cleanup old references
+        del two
+        del three
+        del five
 
-        child2.unindent(parent=child)
-        target =     "root" \
-                 + "\nchild" \
-                 + "\nchild2" \
-                 + "\n    grandchild" \
-                 + "\n    child3" \
-                 + "\n        grandchild2"
-        self.__comp_str_to_node(root, target)
+        two = one.sibling
+        three = two.child
+        three.unindent(parent=two)
+        target =     "one" \
+                 + "\ntwo" \
+                 + "\nthree" \
+                 + "\n    four" \
+                 + "\n    five" \
+                 + "\n        six" \
+                 + "\n"
+        self.__comp_str_to_node(one, target)
 
-        child3.unindent(parent=child2)
-        target =     "root" \
-                 + "\nchild" \
-                 + "\nchild2" \
-                 + "\n    grandchild" \
-                 + "\nchild3" \
-                 + "\n    grandchild2"
-        self.__comp_str_to_node(root, target)
+        # cleanup
+        del two
+        del three
+        three = one.sibling.sibling
+        five = three.child.sibling
+        five.unindent(parent=three)
+        target =     "one" \
+                 + "\ntwo" \
+                 + "\nthree" \
+                 + "\n    four" \
+                 + "\nfive" \
+                 + "\n    six" \
+                 + "\n"
+        self.__comp_str_to_node(one, target)
 
 
 if __name__ == '__main__':
