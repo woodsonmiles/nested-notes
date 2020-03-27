@@ -8,7 +8,7 @@ class Model(object):
 
     __tab: str = "    "
 
-    def __init__(self, view: View):
+    def __init__(self, view: View, root: NestedList = None):
         """
         Attributes
             max_lines: Maximum visible line count for `result_window`
@@ -40,7 +40,10 @@ class Model(object):
         self.__cursor_y = 0
         self.__cursor_x = 0
         # Start of Nested List
-        self.__root: NestedList = self.__init_display()
+        if root is None:
+            self.__root: NestedList = self.__init_display()
+        else:
+            self.__root = root
         self.__page = self.__root.count() // self.__window_rows
 
     @staticmethod
@@ -69,7 +72,7 @@ class Model(object):
 
     @property
     def input_char(self) -> int:
-        return self.__view.getch()
+        return self.__view.input_char
 
     def __correct_lateral_bounds(self):
         """
@@ -108,7 +111,7 @@ class Model(object):
 
     def move_field_end(self, direction: LateralDirection):
         node = self.__get_node()
-        node.get_selected_field_end()
+        self.__cursor_x = node.get_selected_field_end(self.__cursor_x)
 
     def scroll(self, direction: VerticalDirection):
         """Moves the screen up or down
@@ -186,10 +189,10 @@ class Model(object):
         return self.__cursor_x == self.__get_node().width
 
     def at_field_end(self) -> bool:
-        return self.__get_node().get_selected_field_end() == self.__cursor_x
+        return self.__get_node().get_selected_field_end(self.__cursor_x) == self.__cursor_x
 
     def at_field_start(self) -> bool:
-        return self.__get_node().get_selected_field_start() == self.__cursor_x
+        return self.__get_node().get_selected_field_start(self.__cursor_x) == self.__cursor_x
 
     def insert(self, insertion: str):
         """
@@ -240,12 +243,12 @@ class Model(object):
         :precondition: must not be first child or root
         :return: The previous sibling of the current node
         """
-        level = self.__get_node().get_level()
+        level = self.__get_node().level
         for index in reversed(range(self.__cursor_y)):
             node = self.__get_node(start=index)
-            if node.get_level() == level:
+            if node.level == level:
                 return node
-            if node.get_level() < level:
+            if node.level < level:
                 return NullNestedList.get_instance()
         raise Exception("no previous sibling or parent found. Is this root?")
 
@@ -254,10 +257,10 @@ class Model(object):
         Precondition: must not be  level 0 node
         :return: The previous sibling of the current node
         """
-        parent_level = self.__get_node().get_level() - 1
+        parent_level = self.__get_node().level - 1
         for index in reversed(range(self.__cursor_y)):
             node = self.__get_node(start=index)
-            if node.get_level() == parent_level:
+            if node.level == parent_level:
                 return node
         raise Exception("No parent")
 
@@ -294,15 +297,20 @@ class Model(object):
         return len(node.get_padded_field(field_index))
 
     def get_neighbor_field(self, direction: LateralDirection) -> str:
+        """
+        :precondition: cursor cannot currently be in the first field and direction be left
+        """
         node = self.__get_node()
         field_index = node.get_field_index(self.__cursor_x)
-        return node.get_field(field_index)
+        return node.get_field(field_index + direction)
 
     def get_padding_len(self) -> int:
         """
         :return: The length of the padding on the current field
         """
-        return self.__get_node().get_field_padding_len(self.__cursor_x)
+        node = self.__get_node()
+        field_index = node.get_field_index(self.__cursor_x)
+        return node.get_padding_len(field_index)
 
     def get_neighbor_padding_len(self, direction: LateralDirection) -> int:
         """

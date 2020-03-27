@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 from model import Model
-from view import View
+from linuxView import LinuxView
 from curses import wrapper
 from controller import Controller
 
 
 def main(window):
-    view = View(window)
+    view = LinuxView(window)
     model = Model(view)
     controller: Controller = Controller(model)
     controller.run()

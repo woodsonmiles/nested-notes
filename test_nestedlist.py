@@ -31,21 +31,21 @@ class TestNestedList(unittest.TestCase):
         root.insert_child(["child"])
         del root.child
         self.assertEqual(root, target)
-        root.insert_child(["child1"])
-        root.insert_child(["child2"])
-        del root.child
-        target.insert_child(["child1"])
+        root.insert_sibling(["sib1"])
+        root.insert_sibling(["sib2"])
+        del root.sibling
+        target.insert_sibling(["sib1"])
         self.assertEqual(root, target)
 
     def test_str(self):
         root = NestedList(["123", "1"])
-        target = "123    1"
+        target = "123    1\n"
         self.assertEqual(str(root), target)
         root.insert_child(["1234"])
-        target += "\n    1234"
+        target += "    1234\n"
         self.assertEqual(str(root), target)
         root.insert_sibling(["12"])
-        target += "\n12"
+        target += "12\n"
 
     def test_str_complex(self):
         root = NestedList(fields=["root"])
@@ -66,14 +66,14 @@ class TestNestedList(unittest.TestCase):
 
     def test_columns(self):
         root = NestedList(["123", "1"])
-        target = "123    1"
+        target = "123    1\n"
         self.__comp_str_to_node(root, target)
         root.insert_sibling(["1234"])
-        target = "123     1"
-        target += "\n1234"
+        target = "123     1\n"
+        target += "1234\n"
         self.__comp_str_to_node(root, target)
         del root.sibling
-        target = "123    1"
+        target = "123    1\n"
         self.__comp_str_to_node(root, target)
 
     def __comp_str_to_node(self, root: NestedList, target: str):

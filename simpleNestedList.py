@@ -57,7 +57,7 @@ class SimpleNestedList(object):
         return node
 
     def __del__(self):
-        del self.__row
+        self.__row = None
 
     # Abstract properties
 

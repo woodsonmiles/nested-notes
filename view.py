@@ -1,31 +1,32 @@
-import curses
 from styles import Styles
+from abc import ABC, abstractmethod
 
 
-class View(object):
+class View(ABC):
 
-    @staticmethod
-    def signal_user_error():
-        curses.beep()
+    @abstractmethod
+    def signal_user_error(self):
+        pass
 
-    def __init__(self, window):
-        self.__window = window
-        curses.init_pair(Styles.ODD, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(Styles.EVEN, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(Styles.HEADER, curses.COLOR_RED, curses.COLOR_BLACK)
+    @abstractmethod
+    def get_size(self) -> (int,int):
+        pass
 
-    def get_size(self):
-        return self.__window.getmaxyx()
-
+    @abstractmethod
     def addstr(self, y: int, x: int, string: str, style: Styles):
-        self.__window.addstr(y, x, string, curses.color_pair(style))
+        pass
 
+    @abstractmethod
     def move_cursor(self, y: int, x: int):
-        self.__window.move(y, x)
+        pass
 
+    @abstractmethod
     def clear(self):
-        self.__window.erase()
+        pass
 
-    def getch(self) -> int:
-        return self.__window.input_char()
+    @property
+    @abstractmethod
+    def input_char(self) -> int:
+        pass
+        #raise Exception("abstract property")
 
