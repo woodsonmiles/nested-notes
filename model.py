@@ -67,7 +67,8 @@ class Model(object):
             start = self.__abs_cursor_y
         return self.__root.get_node(start + offset)
 
-    def getch(self) -> int:
+    @property
+    def input_char(self) -> int:
         return self.__view.getch()
 
     def __correct_lateral_bounds(self):
@@ -102,14 +103,18 @@ class Model(object):
         self.__correct_lateral_bounds()
 
     def move_end(self, direction: LateralDirection):
-        spaces = len(self.__get_node())
+        spaces = self.__get_node().width
         self.move(direction, spaces)
+
+    def move_field_end(self, direction: LateralDirection):
+        node = self.__get_node()
+        node.get_selected_field_end()
 
     def scroll(self, direction: VerticalDirection):
         """Moves the screen up or down
         Prevents the screen moving past the top or bottom of its text
         """
-        # if not at top or bottom of lines
+        # if not at absolute top or bottom of lines
         if direction == VerticalDirection.UP and self.__top > 0 \
                 or direction == VerticalDirection.DOWN and self.__root.count() > self.__bottom:
             self.__top += direction
@@ -143,7 +148,7 @@ class Model(object):
                 # lines before the top of the screen
                 continue
             row_index = abs_row_index - self.__top
-            if row_index == self.__window_rows:
+            if row_index >= self.__window_rows:
                 break   # stop at end of window
             # Lines within visible screen
             indent_padding = node.indent_padding
@@ -185,9 +190,6 @@ class Model(object):
 
     def at_field_start(self) -> bool:
         return self.__get_node().get_selected_field_start() == self.__cursor_x
-
-    # def get_rel_field_index(self) -> int:
-    #    return self.__get_node().__get_index_in_field(self.__cursor_x)
 
     def insert(self, insertion: str):
         """
@@ -287,7 +289,14 @@ class Model(object):
         """
         :return: The width of the column at this field
         """
-        return self.__get_node().get_column_width(self.__cursor_x)
+        node = self.__get_node()
+        field_index = node.get_field_index()
+        return len(node.get_padded_field(field_index))
+
+    def get_neighbor_field(self, direction: LateralDirection) -> str:
+        node = self.__get_node()
+        field_index = node.get_field_index(self.__cursor_x)
+        return node.get_field(field_index)
 
     def get_padding_len(self) -> int:
         """
@@ -296,10 +305,26 @@ class Model(object):
         return self.__get_node().get_field_padding_len(self.__cursor_x)
 
     def get_neighbor_padding_len(self, direction: LateralDirection) -> int:
-        return self.__get_node().get_neighbor_field_padding_len(self.__cursor_x, direction)
+        """
+        :precondition: cursor cannot currently be in the first field and direction be left
+        :param direction:
+        :return: the number of characters in the padding of the field to the right or left
+        of the field inhabited by the cursor
+        """
+        node = self.__get_node()
+        field_index = node.get_field_index(self.__cursor_x)
+        return node.get_padding_len(field_index + direction)
 
     def get_neighbor_column_width(self, direction: LateralDirection) -> int:
-        return self.__get_node().get_neighbor_column_width(self.__cursor_x, direction)
+        """
+        :precondition: cursor cannot currently be in the first field and direction be left
+        :param direction:
+        :return: the number of characters in the padding of the field to the right or left
+        of the field inhabited by the cursor
+        """
+        node = self.__get_node()
+        field_index = node.get_field_index(self.__cursor_x)
+        return len(node.get_padded_field(field_index + direction))
 
     def combine_fields(self, direction: LateralDirection):
         node = self.__get_node()

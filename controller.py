@@ -11,7 +11,7 @@ class Controller(object):
         """Main loop, waiting on keyboard input"""
         while True:
             self.model.display()
-            key: int = self.model.getch()
+            key: int = self.model.input_char()
             Commands.execute(key, self.model)
 
     def run(self):

@@ -27,5 +27,5 @@ class View(object):
         self.__window.erase()
 
     def getch(self) -> int:
-        return self.__window.getch()
+        return self.__window.input_char()
 

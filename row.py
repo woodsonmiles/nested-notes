@@ -113,9 +113,9 @@ class Row(object):
         return self.__fields[index]
 
     def padded_field(self, index: int):
-        return self.__fields[index] + ' ' * self.__padding_len(index)
+        return self.__fields[index] + ' ' * self.padding_len(index)
 
-    def __padding_len(self, index: int):
+    def padding_len(self, index: int):
         return self.__padded_field_len(index) - self.__text_len(index)
 
     def __text_len(self, index: int):

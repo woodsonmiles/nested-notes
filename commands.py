@@ -24,12 +24,14 @@ class NewLine(KeyCommand):
     def execute(self, key: int, model: Model):
         model.split_node()
 
+
 class BackspaceNewline(KeyCommand):
     def is_relevant(self, key: int, model: Model):
         return model.get_level() == 0 and key == curses.KEY_BACKSPACE and model.at_line_start() and not model.at_root()
 
     def execute(self, key: int, model: Model):
         model.combine_nodes()
+
 
 class IndentTab(KeyCommand):
     def is_relevant(self, key: int, model: Model):
@@ -162,13 +164,11 @@ class CtrLeft(KeyCommand):
         return key == 545
 
     def execute(self, key: int, model: Model):
-        # TODO - have control arrows change behavior for nodes of with less than some number of fields to skip words
-        rel_pos = model.get_rel_field_index()
-        if rel_pos == 0:
-            movement = model.get_neighbor_column_width(LateralDirection.LEFT)
+        left = LateralDirection.LEFT
+        if model.at_field_start():
+            model.move(left, model.get_neighbor_column_width(left))
         else:
-            movement = rel_pos
-        model.move(LateralDirection.LEFT, movement)
+            model.move_field_end(left)
 
 
 class CtrRight(KeyCommand):
@@ -176,13 +176,11 @@ class CtrRight(KeyCommand):
         return key == 560
 
     def execute(self, key: int, model: Model):
-        text_len = model.get_text_len()
-        rel_pos = model.get_rel_field_index()
-        if text_len == rel_pos:
-            movement = model.get_padding_len() + model.get_neighbor_text_len(LateralDirection.RIGHT)
+        right = LateralDirection.RIGHT
+        if model.at_field_end():
+            model.move(right, model.get_padding_len() + len(model.get_neighbor_field(right)))
         else:
-            movement = text_len - rel_pos
-        model.move(LateralDirection.RIGHT, movement)
+            model.move_field_end(right)
 
 
 class Down(KeyCommand):

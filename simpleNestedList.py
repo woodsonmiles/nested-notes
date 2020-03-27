@@ -183,6 +183,9 @@ class SimpleNestedList(object):
     def get_padded_field(self, index: int) -> str:
         return self.__row.padded_field(index)
 
+    def get_padding_len(self, index: int) -> int:
+        return self.__row.padding_len(index)
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, SimpleNestedList):
             return False

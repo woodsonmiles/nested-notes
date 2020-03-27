@@ -109,31 +109,6 @@ class NestedList(SimpleNestedList):
     def last_child(self):
         return self.child.last_sibling
 
-    """
-    def get_text_len(self, x_coord: int) -> int:
-        return self._get_field(x_coord).get_text_len()
-
-    def get_neighbor_text_len(self, x_coord: int, direction: LateralDirection) -> int:
-        neighbor: _Field = self.__get_neighbor_field(x_coord, direction)
-        return neighbor.get_text_len()
-
-    def get_field_padding_len(self, x_coord: int) -> int:
-        return self._get_field(x_coord).get_padding_len()
-
-    def get_neighbor_field_padding_len(self, x_coord: int, direction: LateralDirection) -> int:
-        neighbor: _Field = self.__get_neighbor_field(x_coord, direction)
-        return neighbor.get_padding_len()
-
-    def get_column_width(self, x_coord: int) -> int:
-        return len(self._get_field(x_coord))
-
-    def get_neighbor_column_width(self, x_coord: int, direction: LateralDirection) -> int:
-        neighbor: _Field = self.__get_neighbor_field(x_coord, direction)
-        return len(neighbor)
-
-    def get_indent_len(self):
-        return self.__tab_size * self.__level
-    """
     def get_node(self, row: int):
         """
         :param row: the row the returned NestedList starts at relative to this node
@@ -274,7 +249,7 @@ class NestedList(SimpleNestedList):
     def _append_child_deep(self, new_child):
         """
         Inserts a nestedList node and all its descendants as a child under self's last child
-        :param child: node whose fields and descendants are to be inserted as a new nestedlist under
+        :param new_child: node whose fields and descendants are to be inserted as a new nestedlist under
         self's last child
         """
         if self.child is self.null:
@@ -300,7 +275,7 @@ class NestedList(SimpleNestedList):
         """
         field_index = self.get_field_index(x_coord)
         split_fields: List[str] = []
-        for index, field in enumerate(self.row_iter, start = field_index):
+        for index, field in enumerate(self.row_iter, start=field_index):
             split_fields.append(field)
             self.delete_field(index)
         self.insert_sibling(split_fields)
@@ -325,7 +300,7 @@ class NestedList(SimpleNestedList):
 
 class NestedListIterator:
     def __init__(self, root: NestedList):
-        class FakeNestedList(object):
+        class FakeNestedList(NestedList):
             def __init__(self, child):
                 self.__child = child
 
