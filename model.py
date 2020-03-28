@@ -293,7 +293,7 @@ class Model(object):
         :return: The width of the column at this field
         """
         node = self.__get_node()
-        field_index = node.get_field_index()
+        field_index = node.get_field_index(self.__cursor_x)
         return len(node.get_padded_field(field_index))
 
     def get_neighbor_field(self, direction: LateralDirection) -> str:
@@ -306,7 +306,8 @@ class Model(object):
 
     def get_padding_len(self) -> int:
         """
-        :return: The length of the padding on the current field
+        :return: The length of the padding on the current field or the padding that would be on the field if it
+        were not the last
         """
         node = self.__get_node()
         field_index = node.get_field_index(self.__cursor_x)

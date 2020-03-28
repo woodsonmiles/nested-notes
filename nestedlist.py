@@ -44,7 +44,7 @@ class NestedList(SimpleNestedList):
             if x_coord < ext_length:
                 return index
             x_coord -= ext_length
-        raise IndexError("x_cord {} space out of bounds to the right".format(x_coord))
+        return self.num_fields - 1
 
     def __get_field_start(self, field_index: int) -> int:
         """

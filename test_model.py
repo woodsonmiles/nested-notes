@@ -2,6 +2,7 @@ import unittest
 from model import Model
 from testView import TestView
 from nestedlist import NestedList
+from directions import LateralDirection
 
 
 class MyTestCase(unittest.TestCase):
@@ -89,27 +90,174 @@ class MyTestCase(unittest.TestCase):
         self.assertIs(four, model.get_parent())
 
     def test_get_column_width(self):
-        pass
+        one = NestedList(["one", "two.", "three"])
+        model = Model(TestView([]), one)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 0
+        self.assertEqual(model.get_column_width(), 7)
+        model._Model__cursor_x = 2
+        self.assertEqual(model.get_column_width(), 7)
+        model._Model__cursor_x = 6
+        self.assertEqual(model.get_column_width(), 7)
+        model._Model__cursor_x = 7
+        self.assertEqual(model.get_column_width(), 8)
+        model._Model__cursor_x = 11
+        self.assertEqual(model.get_column_width(), 8)
+        model._Model__cursor_x = 15
+        self.assertEqual(model.get_column_width(), 9)
+        model._Model__cursor_x = 20
+        self.assertEqual(model.get_column_width(), 9)
 
     def test_get_neighbor_column_width(self):
-        pass
+        right = LateralDirection.RIGHT
+        left = LateralDirection.LEFT
+        one = NestedList(["one", "two.", "three"])
+        model = Model(TestView([]), one)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 0
+        self.assertEqual(model.get_neighbor_column_width(right), 8)
+        model._Model__cursor_x = 2
+        self.assertEqual(model.get_neighbor_column_width(right), 8)
+        model._Model__cursor_x = 6
+        self.assertEqual(model.get_neighbor_column_width(right), 8)
+        model._Model__cursor_x = 7
+        self.assertEqual(model.get_neighbor_column_width(right), 9)
+        self.assertEqual(model.get_neighbor_column_width(left), 7)
+        model._Model__cursor_x = 11
+        self.assertEqual(model.get_neighbor_column_width(right), 9)
+        self.assertEqual(model.get_neighbor_column_width(left), 7)
+        model._Model__cursor_x = 15
+        self.assertEqual(model.get_neighbor_column_width(left), 8)
+        model._Model__cursor_x = 20
+        self.assertEqual(model.get_neighbor_column_width(left), 8)
 
     def test_get_neighbor_field(self):
-        pass
+        right = LateralDirection.RIGHT
+        left = LateralDirection.LEFT
+        fields = ["one", "two.", "three"]
+        one = NestedList(fields)
+        model = Model(TestView([]), one)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 0
+        self.assertEqual(model.get_neighbor_field(right), fields[1])
+        model._Model__cursor_x = 2
+        self.assertEqual(model.get_neighbor_field(right), fields[1])
+        model._Model__cursor_x = 6
+        self.assertEqual(model.get_neighbor_field(right), fields[1])
+        model._Model__cursor_x = 7
+        self.assertEqual(model.get_neighbor_field(right), fields[2])
+        self.assertEqual(model.get_neighbor_field(left), fields[0])
+        model._Model__cursor_x = 11
+        self.assertEqual(model.get_neighbor_field(right), fields[2])
+        self.assertEqual(model.get_neighbor_field(left), fields[0])
+        model._Model__cursor_x = 15
+        self.assertEqual(model.get_neighbor_field(left), fields[1])
+        model._Model__cursor_x = 20
+        self.assertEqual(model.get_neighbor_field(left), fields[1])
 
     def test_get_padding_len(self):
-        pass
+        one = NestedList(["one", "two.", "three"])
+        one.insert_sibling(["one", "two.5", "three56"])
+        model = Model(TestView([]), one)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 0
+        self.assertEqual(model.get_padding_len(), 4)
+        model._Model__cursor_x = 2
+        self.assertEqual(model.get_padding_len(), 4)
+        model._Model__cursor_x = 6
+        self.assertEqual(model.get_padding_len(), 4)
+        model._Model__cursor_x = 7
+        self.assertEqual(model.get_padding_len(), 5)
+        model._Model__cursor_x = 11
+        self.assertEqual(model.get_padding_len(), 5)
+        model._Model__cursor_x = 16
+        self.assertEqual(model.get_padding_len(), 6)
+        model._Model__cursor_x = 21
+        self.assertEqual(model.get_padding_len(), 6)
 
     def test_get_neighbor_padding_len(self):
-        pass
+        right = LateralDirection.RIGHT
+        left = LateralDirection.LEFT
+        one = NestedList(["one", "two.", "three"])
+        one.insert_sibling(["one", "two.5", "three56"])
+        model = Model(TestView([]), one)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 0
+        self.assertEqual(model.get_neighbor_padding_len(right), 5)
+        model._Model__cursor_x = 2
+        self.assertEqual(model.get_neighbor_padding_len(right), 5)
+        model._Model__cursor_x = 6
+        self.assertEqual(model.get_neighbor_padding_len(right), 5)
+        model._Model__cursor_x = 7
+        self.assertEqual(model.get_neighbor_padding_len(right), 6)
+        self.assertEqual(model.get_neighbor_padding_len(left), 4)
+        model._Model__cursor_x = 11
+        self.assertEqual(model.get_neighbor_padding_len(right), 6)
+        self.assertEqual(model.get_neighbor_padding_len(left), 4)
+        model._Model__cursor_x = 16
+        self.assertEqual(model.get_neighbor_padding_len(left), 5)
+        model._Model__cursor_x = 21
+        self.assertEqual(model.get_neighbor_padding_len(left), 5)
 
     # Location Getters
 
     def test_is_first_child(self):
-        pass
+        root = NestedList(["root"])
+        child = root.insert_child(["child"])
+        child2 = child.insert_sibling(["child2"])
+        grandchild = child2.insert_child(["grandchild"])
+        grandchild2 = grandchild.insert_sibling(["grandchild2"])
+        child3 = child2.insert_sibling(["child3"])
+        """
+        root
+            child
+            child2
+                grandchild
+                grandchild2
+            child3
+        """
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        self.assertFalse(model.is_first_child())
+        model._Model__cursor_y = 1
+        self.assertTrue(model.is_first_child())
+        model._Model__cursor_y = 2
+        self.assertFalse(model.is_first_child())
+        model._Model__cursor_y = 3
+        self.assertTrue(model.is_first_child())
+        model._Model__cursor_y = 4
+        self.assertFalse(model.is_first_child())
+        model._Model__cursor_y = 5
+        self.assertFalse(model.is_first_child())
 
     def test_at_root(self):
-        pass
+        root = NestedList(["root"])
+        child = root.insert_child(["child"])
+        child2 = child.insert_sibling(["child2"])
+        grandchild = child2.insert_child(["grandchild"])
+        grandchild2 = grandchild.insert_sibling(["grandchild2"])
+        child3 = child2.insert_sibling(["child3"])
+        """
+        root
+            child
+            child2
+                grandchild
+                grandchild2
+            child3
+        """
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        self.assertTrue(model.at_root())
+        model._Model__cursor_y = 1
+        self.assertFalse(model.at_root())
+        model._Model__cursor_y = 2
+        self.assertFalse(model.at_root())
+        model._Model__cursor_y = 3
+        self.assertFalse(model.at_root())
+        model._Model__cursor_y = 4
+        self.assertFalse(model.at_root())
+        model._Model__cursor_y = 5
+        self.assertFalse(model.at_root())
 
     def test_at_line_start(self):
         pass

@@ -4,6 +4,9 @@ from typing import List
 
 
 class TestView(View):
+    """
+    Dummy View only used for testing model
+    """
 
     def __init__(self, keys: List[int]):
         self.__inputs = keys
