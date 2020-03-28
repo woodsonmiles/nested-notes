@@ -59,7 +59,7 @@ class UnIndent(KeyCommand):
 
 class UnSplitBackspace(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_BACKSPACE and not model.at_line_start() and model.at_field_start()
+        return key == curses.KEY_BACKSPACE and not model.at_line_start() and model.at_field_end(LateralDirection.LEFT)
 
     def execute(self, key: int, model: Model):
         model.combine_fields(LateralDirection.LEFT)
@@ -68,7 +68,7 @@ class UnSplitBackspace(KeyCommand):
 class UnSplitDelete(KeyCommand):
     def is_relevant(self, key: int, model: Model):
         return key == curses.KEY_DC and not model.at_line_end() \
-               and model.at_field_end()
+               and model.at_field_end(LateralDirection.RIGHT)
 
     def execute(self, key: int, model: Model):
         model.combine_fields(LateralDirection.RIGHT)
@@ -84,7 +84,7 @@ class Insert(KeyCommand):
 
 class TextBackspace(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_BACKSPACE and not model.at_field_start()
+        return key == curses.KEY_BACKSPACE and not model.at_field_end(LateralDirection.LEFT)
 
     def execute(self, key: int, model: Model):
         model.delete(-1)
@@ -92,7 +92,7 @@ class TextBackspace(KeyCommand):
 
 class TextDelete(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_DC and not model.at_field_end()
+        return key == curses.KEY_DC and not model.at_field_end(LateralDirection.RIGHT)
 
     def execute(self, key: int, model: Model):
         model.delete(0)
@@ -152,7 +152,7 @@ class Right(KeyCommand):
 
     def execute(self, key: int, model: Model):
         padding_len: int = model.get_padding_len()
-        if model.at_field_end():
+        if model.at_field_end(LateralDirection.RIGHT):
             num_spaces = padding_len
         else:
             num_spaces = 1
@@ -165,7 +165,7 @@ class CtrLeft(KeyCommand):
 
     def execute(self, key: int, model: Model):
         left = LateralDirection.LEFT
-        if model.at_field_start():
+        if model.at_field_end(left):
             model.move(left, model.get_neighbor_column_width(left))
         else:
             model.move_field_end(left)
@@ -173,11 +173,11 @@ class CtrLeft(KeyCommand):
 
 class CtrRight(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == 560
+        return key == 560 and not model.at_line_end()
 
     def execute(self, key: int, model: Model):
         right = LateralDirection.RIGHT
-        if model.at_field_end():
+        if model.at_field_end(right):
             model.move(right, model.get_padding_len() + len(model.get_neighbor_field(right)))
         else:
             model.move_field_end(right)

@@ -59,21 +59,20 @@ class NestedList(SimpleNestedList):
             count += len(field)
         raise Exception("Unreachable")
 
-    def get_selected_field_start(self, x_coord: int) -> int:
-        field_index = self.get_field_index(x_coord)
-        return self.__get_field_start(field_index)
-
-    def __get_field_end(self, field_index: int) -> int:
+    def __get_field_end(self, field_index: int, direction: LateralDirection) -> int:
         """
         :param field_index: Which field to get the end of
-        :return: The x-coord of the end of the field at the given index
+        :return: The x-coord of the left or right end of the field at the given index
         """
         start = self.__get_field_start(field_index)
-        return start + len(self.get_field(field_index))
+        if direction == LateralDirection.LEFT:
+            return start
+        else:
+            return start + len(self.get_field(field_index))
 
-    def get_selected_field_end(self, x_coord: int) -> int:
+    def get_selected_field_end(self, x_coord: int, direction: LateralDirection) -> int:
         field_index = self.get_field_index(x_coord)
-        return self.__get_field_end(field_index)
+        return self.__get_field_end(field_index, direction)
 
     def __get_index_in_field(self, x_coord: int) -> int:
         """
@@ -189,7 +188,9 @@ class NestedList(SimpleNestedList):
         makes this node's sibling his child, and its sibling's sibling, its sibling
         """
         assert prev_sibling is not self.null
-        prev_sibling.insert_child(self.fields)
+        new_child = prev_sibling.insert_child(self.fields)
+        new_child._insert_sibling_deep(self.child)
+        del prev_sibling.sibling.child
         del prev_sibling.sibling
 
     def unindent(self, parent: SimpleNestedList):

@@ -87,7 +87,7 @@ class Model(object):
         elif self.__cursor_x > right_limit:
             self.__cursor_x = right_limit
         else:  # cursor is within bounds
-            field_end = node.get_selected_field_end(self.__cursor_x)
+            field_end = node.get_selected_field_end(self.__cursor_x, LateralDirection.RIGHT)
             if field_end < self.__cursor_x:
                 # if cursor in padding of field, put it at end
                 self.__cursor_x = field_end
@@ -111,7 +111,7 @@ class Model(object):
 
     def move_field_end(self, direction: LateralDirection):
         node = self.__get_node()
-        self.__cursor_x = node.get_selected_field_end(self.__cursor_x)
+        self.__cursor_x = node.get_selected_field_end(self.__cursor_x, direction)
 
     def scroll(self, direction: VerticalDirection):
         """Moves the screen up or down
@@ -180,7 +180,7 @@ class Model(object):
         """
         :return: whether the cursor is at the start of the line (past the indent)
         """
-        return self.__cursor_x == self.__get_node().indent_padding
+        return self.__cursor_x == len(self.__get_node().indent_padding)
 
     def at_line_end(self):
         """
@@ -188,11 +188,8 @@ class Model(object):
         """
         return self.__cursor_x == self.__get_node().width
 
-    def at_field_end(self) -> bool:
-        return self.__get_node().get_selected_field_end(self.__cursor_x) == self.__cursor_x
-
-    def at_field_start(self) -> bool:
-        return self.__get_node().get_selected_field_start(self.__cursor_x) == self.__cursor_x
+    def at_field_end(self, direction: LateralDirection) -> bool:
+        return self.__get_node().get_selected_field_end(self.__cursor_x, direction) == self.__cursor_x
 
     def insert(self, insertion: str):
         """
@@ -227,6 +224,8 @@ class Model(object):
         """
         :precondition: current node cannot be first child or root
         """
+        assert not self.is_first_child()
+        assert not self.at_root()
         previous: NestedList = self.get_previous_sibling()
         node: NestedList = self.__get_node()
         node.indent(previous)
@@ -234,8 +233,7 @@ class Model(object):
 
     def unindent_current_node(self):
         parent: NestedList = self.get_parent()
-        prev_sibling: NestedList = self.get_previous_sibling()
-        self.__get_node().unindent(parent, prev_sibling)
+        self.__get_node().unindent(parent)
         self.__cursor_x -= len(self.__tab)
 
     def get_previous_sibling(self) -> NestedList:
@@ -270,9 +268,10 @@ class Model(object):
         self.__cursor_x += node.get_field_padding_len(self.__cursor_x)
 
     def split_node(self):
-        if self.at_line_end() or (not self.at_field_start() and not self.at_field_end()):
+        if self.at_line_end() or (not self.at_field_end(LateralDirection.LEFT)
+                                  and not self.at_field_end(LateralDirection.RIGHT)):
             self.split_field()
-        if self.at_field_end():
+        if self.at_field_end(LateralDirection.RIGHT):
             # cursor needs to be on the first field to move over for node.split()
             self.move(LateralDirection.RIGHT, self.get_padding_len())
         self.__get_node().split(self.__cursor_x)
@@ -281,7 +280,7 @@ class Model(object):
 
     def combine_nodes(self):
         node = self.__get_node()
-        assert node.get_level() == 0
+        assert node.level == 0
         prev_row: NestedList = self.__get_node(offset=-1)
         self.move(VerticalDirection.UP)
         self.move_end(LateralDirection.RIGHT)

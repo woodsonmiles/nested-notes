@@ -260,16 +260,109 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(model.at_root())
 
     def test_at_line_start(self):
-        pass
+        root = NestedList(["root"])
+        child = root.insert_child(["child"])
+        child2 = child.insert_sibling(["child2"])
+        grandchild = child2.insert_child(["grandchild"])
+        grandchild2 = grandchild.insert_sibling(["grandchild2"])
+        child3 = child2.insert_sibling(["child3"])
+        """
+        root
+            child
+            child2
+                grandchild
+                grandchild2
+            child3
+        """
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 0
+        self.assertTrue(model.at_line_start())
+        model._Model__cursor_x = 1
+        self.assertFalse(model.at_line_start())
+
+        model._Model__cursor_y = 1
+        model._Model__cursor_x = 4
+        self.assertTrue(model.at_line_start())
+        model._Model__cursor_x = 5
+        self.assertFalse(model.at_line_start())
+
+        model._Model__cursor_y = 2
+        model._Model__cursor_x = 4
+        self.assertTrue(model.at_line_start())
+        model._Model__cursor_x = 5
+        self.assertFalse(model.at_line_start())
+
+        model._Model__cursor_y = 3
+        model._Model__cursor_x = 8
+        self.assertTrue(model.at_line_start())
+        model._Model__cursor_x = 9
+        self.assertFalse(model.at_line_start())
+
+        model._Model__cursor_y = 4
+        model._Model__cursor_x = 8
+        self.assertTrue(model.at_line_start())
+        model._Model__cursor_x = 9
+        self.assertFalse(model.at_line_start())
+
+        model._Model__cursor_y = 5
+        model._Model__cursor_x = 4
+        self.assertTrue(model.at_line_start())
+        model._Model__cursor_x = 5
+        self.assertFalse(model.at_line_start())
 
     def test_at_line_end(self):
-        pass
+        root = NestedList(["root"])
+        child = root.insert_child(["child", "child"])
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 4
+        self.assertTrue(model.at_line_end())
+        model._Model__cursor_x = 3
+        self.assertFalse(model.at_line_end())
 
-    def test_at_field_start(self):
-        pass
+        model._Model__cursor_y = 1
+        model._Model__cursor_x = 18
+        self.assertTrue(model.at_line_end())
+        model._Model__cursor_x = 17
+        self.assertFalse(model.at_line_end())
 
     def test_at_field_end(self):
-        pass
+        right = LateralDirection.RIGHT
+        left = LateralDirection.LEFT
+        root = NestedList(["root"])
+        child = root.insert_child(["child", "child"])
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 0
+        # root
+        self.assertFalse(model.at_field_end(right))
+        self.assertTrue(model.at_field_end(left))
+        model._Model__cursor_x = 4
+        self.assertTrue(model.at_field_end(right))
+        self.assertFalse(model.at_field_end(left))
+        model._Model__cursor_x = 3
+        self.assertFalse(model.at_field_end(right))
+        self.assertFalse(model.at_field_end(left))
+        # child
+        model._Model__cursor_y = 1
+        model._Model__cursor_x = 4
+        self.assertTrue(model.at_field_end(left))
+        self.assertFalse(model.at_field_end(right))
+        model._Model__cursor_y = 1
+        model._Model__cursor_x = 9
+        self.assertTrue(model.at_field_end(right))
+        self.assertFalse(model.at_field_end(left))
+        model._Model__cursor_y = 1
+        model._Model__cursor_x = 13
+        self.assertTrue(model.at_field_end(left))
+        self.assertFalse(model.at_field_end(right))
+        model._Model__cursor_y = 1
+        model._Model__cursor_x = 18
+        self.assertTrue(model.at_field_end(right))
+        self.assertFalse(model.at_field_end(left))
+        model._Model__cursor_x = 17
+        self.assertFalse(model.at_field_end(right))
 
     # Actions
 
@@ -295,15 +388,21 @@ class MyTestCase(unittest.TestCase):
         pass
 
     def test_indent_current_node(self):
-        pass
+        one = NestedList(["one"])
+        two = one.insert_sibling(["two"])
+        three = two.insert_sibling(["three"])
+        four = three.insert_sibling(["four"])
+        model = Model(TestView([]), one)
+        model._Model__cursor_y = 0
+        self.assertRaises(Exception, lambda: model.indent_current_node())
+        model._Model__cursor_y = 1
+
 
     def test_unindent_current_node(self):
         pass
 
     def test_combine_nodes(self):
         pass
-
-
 
 
 if __name__ == '__main__':
