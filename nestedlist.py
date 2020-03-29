@@ -95,19 +95,6 @@ class NestedList(SimpleNestedList):
     def null(self):
         return NullNestedList.get_instance()
 
-    @property
-    def last_sibling(self):
-        """
-        :return: Last sibling on this level of a nested list
-        """
-        if self.sibling is self.null:
-            return self
-        return self.sibling.last_sibling
-
-    @property
-    def last_child(self):
-        return self.child.last_sibling
-
     def get_node(self, row: int):
         """
         :param row: the row the returned NestedList starts at relative to this node
@@ -188,7 +175,7 @@ class NestedList(SimpleNestedList):
         makes this node's sibling his child, and its sibling's sibling, its sibling
         """
         assert prev_sibling is not self.null
-        new_child = prev_sibling.insert_child(self.fields)
+        new_child = prev_sibling.append_child(self.fields)
         new_child._insert_sibling_deep(self.child)
         del prev_sibling.sibling.child
         del prev_sibling.sibling
@@ -207,65 +194,13 @@ class NestedList(SimpleNestedList):
         if parent.child is self:
             del parent.child
         else:
-            child = parent.child
-            next_child = child.sibling
+            indented_node = parent.child
+            next_child = indented_node.sibling
             while next_child is not self:
-                child = next_child
-                next_child = child.sibling
+                indented_node = next_child
+                next_child = indented_node.sibling
             # delete reference to self and all descendants
-            del child.sibling.child
-            del child.sibling
-
-    def _attach_to_parent(self, parent):
-        """
-        Reverse of insert_child, used to allow NullNestedList to polymophically handle child insertion
-        differently.
-        Inserts the fields of self into the context of parent
-        Use instead of insert_child when you want the insertion to only happen if self is not null
-        :param parent: node to insert self under
-        :return: The new instance of self that is now attached to prev_sibling
-        """
-        return parent.insert_child(self.fields)
-
-    def _attach_to_prev_sibling(self, prev_sibling):
-        """
-        Reverse of insert_sibling, used to allow NullNestedList to polymophically handle sibling insertion
-        differently.
-        Inserts the fields of self into the context of prev_sibling
-        Use instead of insert_sibling when you want the insertion to only happen if self is not null
-        :param prev_sibling: node to insert self under
-        :return: The new instance of self that is now attached to prev_sibling
-        """
-        return prev_sibling.insert_sibling(self.fields)
-
-    def _insert_sibling_deep(self, sibling):
-        """
-        Inserts a nestedList node and all its descendants as a sibling under self
-        :param sibling:
-        """
-        new_sibling = sibling._attach_to_prev_sibling(prev_sibling=self)
-        new_sibling._insert_child_deep(sibling.child)
-        new_sibling._insert_sibling_deep(sibling.sibling)
-
-    def _append_child_deep(self, new_child):
-        """
-        Inserts a nestedList node and all its descendants as a child under self's last child
-        :param new_child: node whose fields and descendants are to be inserted as a new nestedlist under
-        self's last child
-        """
-        if self.child is self.null:
-            self._insert_child_deep(new_child)
-        else:
-            self.last_child._insert_sibling_deep(new_child)
-
-    def _insert_child_deep(self, child):
-        """
-        Inserts a nestedList node and all its descendants as a child under self
-        :param child: node whose fields and descendants are to be inserted as a new nestedlist under self
-        """
-        new_child = child._attach_to_parent(parent=self)
-        new_child._insert_child_deep(child.child)
-        new_child._insert_sibling_deep(child.sibling)
+            indented_node.delete_sibling_deep()
 
     def split(self, x_coord: int):
         """
@@ -276,14 +211,20 @@ class NestedList(SimpleNestedList):
         """
         field_index = self.get_field_index(x_coord)
         split_fields: List[str] = []
-        for index, field in enumerate(self.row_iter, start=field_index):
+        for index in range(self.num_fields - field_index):
+            field = self.get_field(field_index)
             split_fields.append(field)
-            self.delete_field(index)
+            self.delete_field(field_index)
         self.insert_sibling(split_fields)
 
-    def combine(self, previous_node: SimpleNestedList):
-        previous_node.insert_sibling(self.fields)
-        del self
+    def combine(self, previous_node: SimpleNestedList, prev_sibling: SimpleNestedList):
+        """
+        Removes this row from its tree and adds its fields to previous_node
+        :param previous_node: The row to add self's fields to
+        """
+        for field in self.fields:
+            previous_node.append_field(field)
+        del prev_sibling.sibling
 
     """
     def give_fields(self, prev_row, prev_sibling):

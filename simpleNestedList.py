@@ -66,9 +66,58 @@ class SimpleNestedList(object):
         raise Exception("Abstract property")
         # return _NullSimpleNestedList.getInstance()
 
-    @property
-    def last_sibling(self):
-        raise Exception("Abstract property")
+    # Protected methods
+
+    def _attach_to_parent(self, parent):
+        """
+        Reverse of insert_child, used to allow NullNestedList to polymophically handle child insertion
+        differently.
+        Inserts the fields of self into the context of parent
+        Use instead of insert_child when you want the insertion to only happen if self is not null
+        :param parent: node to insert self under
+        :return: The new instance of self that is now attached to prev_sibling
+        """
+        return parent.insert_child(self.fields)
+
+    def _attach_to_prev_sibling(self, prev_sibling):
+        """
+        Reverse of insert_sibling, used to allow NullNestedList to polymophically handle sibling insertion
+        differently.
+        Inserts the fields of self into the context of prev_sibling
+        Use instead of insert_sibling when you want the insertion to only happen if self is not null
+        :param prev_sibling: node to insert self under
+        :return: The new instance of self that is now attached to prev_sibling
+        """
+        return prev_sibling.insert_sibling(self.fields)
+
+    def _insert_sibling_deep(self, sibling):
+        """
+        Inserts a nestedList node and all its descendants as a sibling under self
+        :param sibling:
+        """
+        new_sibling = sibling._attach_to_prev_sibling(prev_sibling=self)
+        new_sibling._insert_child_deep(sibling.child)
+        new_sibling._insert_sibling_deep(sibling.sibling)
+
+    def _append_child_deep(self, new_child):
+        """
+        Inserts a nestedList node and all its descendants as a child under self's last child
+        :param new_child: node whose fields and descendants are to be inserted as a new nestedlist under
+        self's last child
+        """
+        if self.child is self.null:
+            self._insert_child_deep(new_child)
+        else:
+            self.last_child._insert_sibling_deep(new_child)
+
+    def _insert_child_deep(self, child):
+        """
+        Inserts a nestedList node and all its descendants as a child under self
+        :param child: node whose fields and descendants are to be inserted as a new nestedlist under self
+        """
+        new_child = child._attach_to_parent(parent=self)
+        new_child._insert_child_deep(child.child)
+        new_child._insert_sibling_deep(child.sibling)
 
     # Properties
 
@@ -79,6 +128,20 @@ class SimpleNestedList(object):
         """
         # TODO make an inner class node and use decorator getters and setters
         return self.__columns
+
+
+    @property
+    def last_sibling(self):
+        """
+        :return: Last sibling on this level of a nested list
+        """
+        if self.sibling is self.null:
+            return self
+        return self.sibling.last_sibling
+
+    @property
+    def last_child(self):
+        return self.child.last_sibling
 
     @property
     def level(self):
@@ -97,12 +160,18 @@ class SimpleNestedList(object):
     def sibling(self):
         """
         Deletes the sibling row only, not its children or siblings
-        The sibling is replaces by this.sibling.sibling
+        The sibling is replaced by this.sibling.sibling and its children are given to this
         """
-        nephiew = self.sibling.child
-        if nephiew is not self.null:
-            self.append_child(self.sibling.child.fields)
+        nephew = self.sibling.child
+        if nephew is not self.null:
+            self._append_child_deep(nephew)
         self.__sibling = self.sibling.sibling
+
+    def delete_sibling_deep(self):
+        """
+        Deletes the sibling row and all its siblings and children
+        """
+        self.__sibling = self.null
 
     def insert_sibling(self, texts: List[str] = None):
         if texts is None:
@@ -118,7 +187,7 @@ class SimpleNestedList(object):
     @child.deleter
     def child(self):
         """
-        Deletes the child row and all descendants recursively
+        Deletes the child row and all children, siblings, and descendants recursively
         """
         self.__child = self.null
 
@@ -126,12 +195,13 @@ class SimpleNestedList(object):
         """
         Adds new child as the last child under this
         :param texts: fields to appear in the new child
+        :return: The new child appended
         """
         if self.__child is self.null:
-            self.insert_child(texts)
-        else:
-            last_child = self.__child.last_sibling
-            last_child.insert_sibling(texts)
+            return self.insert_child(texts)
+        # else this has at least one child
+        last_child = self.__child.last_sibling
+        return last_child.insert_sibling(texts)
 
     def insert_child(self, texts: List[str] = None):
         if texts is None:
@@ -170,6 +240,9 @@ class SimpleNestedList(object):
 
     def insert_field(self, index: int, text: str):
         self.__row.insert(index, text)
+
+    def append_field(self, text: str):
+        self.__row.append(text)
 
     def delete_field(self, index):
         self.__row.remove(index)

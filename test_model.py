@@ -367,42 +367,283 @@ class MyTestCase(unittest.TestCase):
     # Actions
 
     def test_move(self):
-        pass
+        right = LateralDirection.RIGHT
+        left = LateralDirection.LEFT
+        root = NestedList(["root", "node"])
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 3
+        model.move(right)
+        self.assertEqual(model._Model__cursor_x, 4)
+        model.move(right)
+        # will be brought back to end of field
+        self.assertEqual(model._Model__cursor_x, 4)
+        model.move(right, 4)
+        self.assertEqual(model._Model__cursor_x, 8)
+        model.move(right)
+        self.assertEqual(model._Model__cursor_x, 9)
+        model.move(left)
+        self.assertEqual(model._Model__cursor_x, 8)
+        model.move(left)
+        self.assertEqual(model._Model__cursor_x, 4)
 
     def test_move_end(self):
-        pass
+        right = LateralDirection.RIGHT
+        left = LateralDirection.LEFT
+        root = NestedList(["root", "node"])
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 2
+        model.move_end(right)
+        self.assertEqual(model._Model__cursor_x, 12)
+        model.move_end(left)
+        self.assertEqual(model._Model__cursor_x, 0)
 
     def test_move_field_end(self):
-        pass
+        right = LateralDirection.RIGHT
+        left = LateralDirection.LEFT
+        root = NestedList(["root", "node"])
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 2
+        model.move_field_end(right)
+        self.assertEqual(model._Model__cursor_x, 4)
+        model.move_field_end(left)
+        self.assertEqual(model._Model__cursor_x, 0)
 
     def test_delete(self):
-        pass
+        root = NestedList(["root", "node"])
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 3
+        model.delete(0)
+        self.assertEqual(model.get_field(), "roo")
+        model.delete(-1)
+        self.assertEqual(model.get_field(), "ro")
 
     def test_insert(self):
-        pass
+        root = NestedList(["root", "node"])
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 4
+        model.insert('s')
+        self.assertEqual(model.get_field(), "roots")
 
     def test_split_field(self):
-        pass
+        root = NestedList(["root", "node"])
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 3
+        model.split_field()
+        fields = str(model._Model__root)
+        target = 'roo    t    node\n'
+        self.assertEqual(fields, target)
 
-    def test_combine_field(self):
-        pass
+    def test_combine_field_right(self):
+        root = NestedList(["root", "node"])
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 4
+        model.combine_fields(LateralDirection.RIGHT)
+        fields = str(model._Model__root)
+        target = 'rootnode\n'
+        self.assertEqual(fields, target)
+        self.assertEqual(model._Model__cursor_x, 4)
+
+    def test_combine_field_left(self):
+        root = NestedList(["root", "node"])
+        model = Model(TestView([]), root)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 8
+        model.combine_fields(LateralDirection.LEFT)
+        fields = str(model._Model__root)
+        target = 'rootnode\n'
+        self.assertEqual(fields, target)
+        self.assertEqual(model._Model__cursor_x, 4)
 
     def test_indent_current_node(self):
         one = NestedList(["one"])
         two = one.insert_sibling(["two"])
         three = two.insert_sibling(["three"])
-        four = three.insert_sibling(["four"])
+        three.insert_sibling(["four"])
         model = Model(TestView([]), one)
         model._Model__cursor_y = 0
         self.assertRaises(Exception, lambda: model.indent_current_node())
         model._Model__cursor_y = 1
+        model.indent_current_node()
+        target = 'one\n' \
+                + '    two\n' \
+                + 'three\n' \
+                + 'four\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+        model._Model__cursor_y = 2
+        model.indent_current_node()
+        target = 'one\n' \
+                 + '    two\n' \
+                 + '    three\n' \
+                 + 'four\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+        model._Model__cursor_y = 3
+        model.indent_current_node()
+        target = 'one\n' \
+                 + '    two\n' \
+                 + '    three\n' \
+                 + '    four\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+        model._Model__cursor_y = 2
+        model.indent_current_node()
+        target = 'one\n' \
+                 + '    two\n' \
+                 + '        three\n' \
+                 + '    four\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+        model._Model__cursor_y = 3
+        model.indent_current_node()
+        target = 'one\n' \
+                 + '    two\n' \
+                 + '        three\n' \
+                 + '        four\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+        model._Model__cursor_y = 3
+        model.indent_current_node()
+        target = 'one\n' \
+                 + '    two\n' \
+                 + '        three\n' \
+                 + '            four\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
 
+    def test_unindent_current_node_simple(self):
+        one = NestedList(["one"])
+        two = one.insert_child(["two"])
+        model = Model(TestView([]), one)
+        target = 'one\n' \
+                 + '    two\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+        self.assertRaises(Exception, lambda: model.indent_current_node())
+        model._Model__cursor_y = 1
+        model.unindent_current_node()
+        target =   'one\n' \
+                 + 'two\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
 
-    def test_unindent_current_node(self):
-        pass
+    def test_unindent_current_node_complex(self):
+        one = NestedList(["one"])
+        two = one.insert_child(["two"])
+        three = two.insert_sibling(["three"])
+        four = three.insert_child(["four"])
+        four.insert_sibling(["five"])
+        six = three.insert_sibling(["six"])
+        six.insert_sibling(["seven"])
+        one.insert_sibling(["eight"])
+        model = Model(TestView([]), one)
+        target =   'one\n' \
+                 + '    two\n' \
+                 + '    three\n' \
+                 + '        four\n' \
+                 + '        five\n' \
+                 + '    six\n' \
+                 + '    seven\n' \
+                 + 'eight\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+        self.assertRaises(Exception, lambda: model.indent_current_node())
+        model._Model__cursor_y = 2
+        model.unindent_current_node()
+        target =   'one\n' \
+                 + '    two\n' \
+                 + 'three\n' \
+                 + '    four\n' \
+                 + '    five\n' \
+                 + '    six\n' \
+                 + '    seven\n' \
+                 + 'eight\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
 
-    def test_combine_nodes(self):
-        pass
+    def test_combine_nodes_simple(self):
+        one = NestedList(["one"])
+        two = one.insert_sibling(["two"])
+        model = Model(TestView([]), one)
+        target =   'one\n' \
+                 + 'two\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+        model._Model__cursor_y = 1
+        model.combine_nodes()
+        target = 'one    two\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+
+    def test_combine_nodes_complex(self):
+        one = NestedList(["one"])
+        two = one.insert_child(["two"])
+        three = two.insert_child(["three"])
+        three.insert_child(["four", "four", "four"])
+        five = one.insert_sibling(["five", "five", "five"])
+        five.insert_child(["six"])
+        model = Model(TestView([]), one)
+        target = 'one\n' \
+                 + '    two\n' \
+                 + '        three\n' \
+                 + '            four    four    four\n' \
+                 + 'five    five    five\n' \
+                 + '    six\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+        model._Model__cursor_y = 4
+        model.combine_nodes()
+        target = 'one\n' \
+                 + '    two\n' \
+                 + '        three\n' \
+                 + '            four    four    four    five    five    five\n' \
+                 + '    six\n'
+        actual = str(one)
+        self.assertEqual(target, actual)
+
+    def test_split_node_simple(self):
+        root = NestedList(["one", "two", "three"])
+        model = Model(TestView([]), root)
+        target = "one    two    three\n"
+        actual = str(root)
+        self.assertEqual(target, actual)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 8
+        model.split_node()
+        target =  "one    t\n" \
+                + "wo     three\n"
+        actual = str(root)
+        self.assertEqual(target, actual)
+
+    def test_split_node_complex(self):
+        root = NestedList(["root"])
+        one = root.insert_child(["one", "two", "three"])
+        one.insert_child(["two"])
+        one.insert_sibling(["three"])
+        target = "root\n" \
+                + "    one    two    three\n" \
+                + "        two\n" \
+                + "    three\n"
+        actual = str(root)
+        self.assertEqual(actual, target)
+        model._Model__cursor_y = 1
+        model._Model__cursor_x = 12
+        model.split_node()
+        target = "root\n" \
+                + "    one    t" \
+                + "    wo     three\n" \
+                + "        two\n" \
+                + "    three\n"
+        actual = str(root)
+        self.assertEqual(actual, target)
+
 
 
 if __name__ == '__main__':

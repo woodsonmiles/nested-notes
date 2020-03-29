@@ -203,7 +203,7 @@ class Model(object):
     def delete(self, x_coord_offset: int):
         """
         Delete the character at the given position
-        :param x_coord_offset: the offset from the x_coord of the cursor
+        :param x_coord_offset: the offset from the x_coord of the cursor where the character to be deleted is
         """
         node: NestedList = self.__get_node()
         node.delete_char_at(self.__cursor_x + x_coord_offset)
@@ -265,7 +265,7 @@ class Model(object):
     def split_field(self):
         node = self.__get_node()
         node.split_field(self.__cursor_x)
-        self.__cursor_x += node.get_field_padding_len(self.__cursor_x)
+        self.__cursor_x += self.get_padding_len()
 
     def split_node(self):
         if self.at_line_end() or (not self.at_field_end(LateralDirection.LEFT)
@@ -279,12 +279,17 @@ class Model(object):
         self.move(LateralDirection.LEFT, self.__cursor_x)
 
     def combine_nodes(self):
-        node = self.__get_node()
-        assert node.level == 0
+        """
+        removes this row and adds its fields onto the previous row
+        """
+        to_remove = self.__get_node()
+        assert to_remove.level == 0
+        # prev_row: not necessarily the previous_sibling
         prev_row: NestedList = self.__get_node(offset=-1)
+        prev_sibling: NestedList = self.get_previous_sibling()
         self.move(VerticalDirection.UP)
         self.move_end(LateralDirection.RIGHT)
-        node.combine(prev_row)
+        to_remove.combine(prev_row, prev_sibling)
         self.move(LateralDirection.RIGHT, self.get_padding_len())
 
     def get_column_width(self) -> int:
@@ -294,6 +299,11 @@ class Model(object):
         node = self.__get_node()
         field_index = node.get_field_index(self.__cursor_x)
         return len(node.get_padded_field(field_index))
+
+    def get_field(self) -> str:
+        node = self.__get_node()
+        field_index = node.get_field_index(self.__cursor_x)
+        return node.get_field(field_index)
 
     def get_neighbor_field(self, direction: LateralDirection) -> str:
         """
@@ -335,8 +345,15 @@ class Model(object):
         return len(node.get_padded_field(field_index + direction))
 
     def combine_fields(self, direction: LateralDirection):
+        """
+        :preconditions: If direction is left, the cursor is on the left edge of the current field
+            If right, it is on the right edge of the current field
+        :param direction: The direction of the field that will be combined with the current field
+        """
+        assert self.at_field_end(direction)
         node = self.__get_node()
-        movement = self.get_neighbor_padding_len(direction=LateralDirection.LEFT)
+        # movement must be calculated before node combination, even though only used by left combine
+        movement = self.get_neighbor_padding_len(direction)
         node.combine_fields(self.__cursor_x, direction)
         if direction == LateralDirection.LEFT:
             self.__cursor_x -= movement

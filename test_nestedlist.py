@@ -22,7 +22,7 @@ class TestNestedList(unittest.TestCase):
         target = "1    2    3"
         self.assertEqual(result, target)
 
-    def test_delete(self):
+    def test_delete_simple(self):
         root = NestedList(["root"])
         root.insert_sibling(["sib"])
         del root.sibling
@@ -36,6 +36,27 @@ class TestNestedList(unittest.TestCase):
         del root.sibling
         target.insert_sibling(["sib1"])
         self.assertEqual(root, target)
+
+    def test_delete_sibling(self):
+        one = NestedList(["one"])
+        two = one.insert_sibling(["two"])
+        three = two.insert_child(["three"])
+        four = three.insert_sibling(["four"])
+        five = two.insert_sibling(["five"])
+        target = "one\n" \
+                 + "two\n" \
+                 + "    three\n" \
+                 + "    four\n" \
+                 + "five\n"
+        actual = str(one)
+        self.assertEqual(target, actual)
+        del one.sibling
+        target = "one\n" \
+                + "    three\n" \
+                + "    four\n" \
+                + "five\n"
+        actual = str(one)
+        self.assertEqual(target, actual)
 
     def test_str(self):
         root = NestedList(["123", "1"])
