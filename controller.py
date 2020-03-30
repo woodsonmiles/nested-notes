@@ -1,5 +1,6 @@
-from commands import Commands
+from keyEffect import Commands
 from model import Model
+import keyboard
 
 
 class Controller(object):
@@ -9,6 +10,7 @@ class Controller(object):
 
     def __input_stream(self):
         """Main loop, waiting on keyboard input"""
+
         while True:
             self.model.display()
             key: int = self.model.input_char
