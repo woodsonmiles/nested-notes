@@ -89,7 +89,8 @@ class NestedList(SimpleNestedList):
             if x_coord < ext_length:
                 return x_coord
             x_coord -= ext_length
-        raise IndexError("x_cord {} space right out of bounds".format(x_coord))
+        # else assume at line end
+        return len(self.get_field(-1))
 
     @property
     def null(self):
@@ -215,7 +216,10 @@ class NestedList(SimpleNestedList):
             field = self.get_field(field_index)
             split_fields.append(field)
             self.delete_field(field_index)
-        self.insert_sibling(split_fields)
+        new_sibling = self.insert_sibling(split_fields)
+        new_sibling._insert_child_deep(self.child)
+        del self.child
+
 
     def combine(self, previous_node: SimpleNestedList, prev_sibling: SimpleNestedList):
         """

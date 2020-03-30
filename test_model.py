@@ -627,24 +627,46 @@ class MyTestCase(unittest.TestCase):
         one = root.insert_child(["one", "two", "three"])
         one.insert_child(["two"])
         one.insert_sibling(["three"])
+        model = Model(TestView([]), root)
         target = "root\n" \
-                + "    one    two    three\n" \
+                + "    one      two    three\n" \
                 + "        two\n" \
                 + "    three\n"
         actual = str(root)
         self.assertEqual(actual, target)
         model._Model__cursor_y = 1
-        model._Model__cursor_x = 12
+        model._Model__cursor_x = 14
         model.split_node()
         target = "root\n" \
-                + "    one    t" \
-                + "    wo     three\n" \
+                + "    one      t\n" \
+                + "    wo       three\n" \
                 + "        two\n" \
                 + "    three\n"
         actual = str(root)
         self.assertEqual(actual, target)
 
-
+    def test_split_node_end(self):
+        root = NestedList(["root"])
+        one = root.insert_child(["one", "two", "three"])
+        one.insert_child(["two"])
+        one.insert_sibling(["three"])
+        model = Model(TestView([]), root)
+        target = "root\n" \
+                 + "    one      two    three\n" \
+                 + "        two\n" \
+                 + "    three\n"
+        actual = str(root)
+        self.assertEqual(actual, target)
+        model._Model__cursor_y = 1
+        model._Model__cursor_x = 25
+        model.split_node()
+        target = "root\n" \
+                 + "    one      two    three\n" \
+                 + "    \n" \
+                 + "        two\n" \
+                 + "    three\n"
+        actual = str(root)
+        self.assertEqual(actual, target)
 
 if __name__ == '__main__':
     unittest.main()
