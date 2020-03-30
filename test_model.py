@@ -668,5 +668,6 @@ class MyTestCase(unittest.TestCase):
         actual = str(root)
         self.assertEqual(actual, target)
 
+
 if __name__ == '__main__':
     unittest.main()

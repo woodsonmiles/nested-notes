@@ -242,7 +242,7 @@ class Model(object):
         :return: The previous sibling of the current node
         """
         level = self.__get_node().level
-        for index in reversed(range(self.__cursor_y)):
+        for index in reversed(range(self.__abs_cursor_y)):
             node = self.__get_node(start=index)
             if node.level == level:
                 return node
@@ -256,7 +256,7 @@ class Model(object):
         :return: The previous sibling of the current node
         """
         parent_level = self.__get_node().level - 1
-        for index in reversed(range(self.__cursor_y)):
+        for index in reversed(range(self.__abs_cursor_y)):
             node = self.__get_node(start=index)
             if node.level == parent_level:
                 return node
