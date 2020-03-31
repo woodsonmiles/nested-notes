@@ -172,6 +172,7 @@ class Model(object):
                 self.__view.addstr(row_index, printed_chars, text, style)
                 printed_chars += len(text)
         self.__view.move_cursor(self.__cursor_y, self.__cursor_x)
+        self.__view.refresh()
 
     def at_root(self):
         return self.__get_node() is self.__root

@@ -1,4 +1,3 @@
-from keyEffect import KeyEffect
 from directions import LateralDirection, VerticalDirection
 from model import Model
 from typing import List
@@ -42,11 +41,12 @@ class HotKey(ABC):
         raise Exception("No relevant effect")
 
     def execute(self):
-        effect = Commands.__get_effect()
+        effect = self.__get_effect()
         effect.execute(self.model)
+        self.model.display()
 
     def add(self):
-        keyboard.add_hotkey(self.key_combination, self.execute())
+        keyboard.add_hotkey(self.key_combination, self.execute, suppress=True)
 
 
 class Tab(HotKey):
@@ -57,7 +57,7 @@ class Tab(HotKey):
     def _init_key_effects(self) -> List[KeyEffect]:
         class Indent(KeyEffect):
             def is_relevant(self, model: Model):
-                return key == 9 and model.at_line_start() and not model.is_first_child()
+                return model.at_line_start() and not model.is_first_child()
 
             def execute(self, model: Model):
                 model.indent_current_node()

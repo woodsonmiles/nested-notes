@@ -1,12 +1,11 @@
 import curses
+from abc import ABC
+
 from styles import Styles
 from view import View
 
-class LinuxView(View):
 
-    @staticmethod
-    def signal_user_error():
-        curses.beep()
+class LinuxView(View, ABC):
 
     def __init__(self, window):
         self.__window = window
@@ -29,3 +28,7 @@ class LinuxView(View):
     @property
     def input_char(self) -> int:
         return self.__window.getch()
+
+    def refresh(self):
+        self.__window.refresh()
+
