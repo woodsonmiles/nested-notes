@@ -34,3 +34,6 @@ class TestView(View):
 
     def signal_user_error(self):
         pass
+
+    def refresh(self):
+        pass

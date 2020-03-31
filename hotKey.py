@@ -35,10 +35,22 @@ class HotKey(ABC):
         pass
 
     def __get_effect(self) -> KeyEffect:
+        class NoEffect(KeyEffect):
+            """
+            Used if no effect for the given hotkey is appropriate
+            Signals to the user that they attempted an unauthorized action
+            """
+            def is_relevant(self, model: Model) -> bool:
+                return False
+
+            def execute(self, model: Model):
+                model.signal_user_error()
+
+        # start method
         for effect in self.key_effects:
             if effect.is_relevant(self.model):
                 return effect
-        raise Exception("No relevant effect")
+        return NoEffect()
 
     def execute(self):
         effect = self.__get_effect()
@@ -70,6 +82,38 @@ class Tab(HotKey):
                 model.split_field()
 
         return [Indent(), Split()]
+
+
+class ShiftTab(HotKey):
+    @property
+    def key_combination(self) -> str:
+        return 'shift+tab'
+
+    def _init_key_effects(self) -> List[KeyEffect]:
+        class ShiftTabEffect(KeyEffect):
+            def is_relevant(self, model: Model):
+                return True
+
+            def execute(self, model: Model):
+                model.unindent_current_node()
+
+        return [ShiftTabEffect()]
+
+
+class CtrlEnter(HotKey):
+    @property
+    def key_combination(self) -> str:
+        return 'ctrl+enter'
+
+    def _init_key_effects(self) -> List[KeyEffect]:
+        class ToggleCollapse(KeyEffect):
+            def is_relevant(self, model: Model) -> bool:
+                return model.current_node_has_child
+
+            def execute(self, model: Model):
+                model.toggle_current_node_collapsed()
+
+        return [ToggleCollapse()]
 
 
 class Enter(HotKey):

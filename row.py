@@ -36,6 +36,9 @@ class Row(object):
         self.__columns = columns
         for field in fields:
             self.append(field)
+        # if no fields, create one empty field
+        if len(fields) == 0:
+            self.append('')
 
     def __del__(self):
         """
@@ -51,6 +54,9 @@ class Row(object):
         self.__detach_columns(index)
         del self.__fields[index]
         self.__attach_columns(index)
+        # If the only field is deleted, replace it with an empty field
+        if len(self.fields) == 0:
+            self.append('')
 
     def insert(self, index: int, text: str):
         """

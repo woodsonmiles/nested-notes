@@ -96,6 +96,17 @@ class NestedList(SimpleNestedList):
     def null(self):
         return NullNestedList.get_instance()
 
+    @property
+    def has_child(self) -> bool:
+        return self.child != self.null
+
+    @property
+    def collapsed(self) -> bool:
+        return self.__collapsed
+
+    def toggle_collapsed(self):
+        self.__collapsed = not self.__collapsed
+
     def get_node(self, row: int):
         """
         :param row: the row the returned NestedList starts at relative to this node
@@ -104,10 +115,11 @@ class NestedList(SimpleNestedList):
         if row == 0:
             return self
         row -= 1
-        child_count = self.child.count()
-        if row < child_count:
-            return self.child.get_node(row)
-        row -= child_count
+        if not self.collapsed:
+            child_count = self.child.count()
+            if row < child_count:
+                return self.child.get_node(row)
+            row -= child_count
         sibling_count = self.sibling.count()
         if row < sibling_count:
             return self.sibling.get_node(row)
@@ -258,13 +270,17 @@ class NestedListIterator:
             def sibling(self):
                 return NullNestedList.get_instance()
 
+            @property
+            def collapsed(self) -> bool:
+                return False
+
         # fake node parenting root for cleaner loop in iterator
         first = FakeNestedList(root)
         self.previous: List[NestedList] = [first]
 
     def __next__(self):
         next_node = self.previous[-1].child
-        if not isinstance(next_node, NullNestedList):
+        if not isinstance(next_node, NullNestedList) and not self.previous[-1].collapsed:
             self.previous.append(next_node)
             return next_node
         while len(self.previous) > 0:

@@ -2,7 +2,7 @@ import unittest
 from model import Model
 from testView import TestView
 from nestedlist import NestedList
-from directions import LateralDirection
+from directions import LateralDirection, VerticalDirection
 
 
 class MyTestCase(unittest.TestCase):
@@ -366,7 +366,7 @@ class MyTestCase(unittest.TestCase):
 
     # Actions
 
-    def test_move(self):
+    def test_move_lateral(self):
         right = LateralDirection.RIGHT
         left = LateralDirection.LEFT
         root = NestedList(["root", "node"])
@@ -386,6 +386,30 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(model._Model__cursor_x, 8)
         model.move(left)
         self.assertEqual(model._Model__cursor_x, 4)
+
+    def test_move_vertical(self):
+        up = VerticalDirection.UP
+        down = VerticalDirection.DOWN
+        one = NestedList(["one", "one"])
+        two = one.insert_sibling(["two"])
+        three = two.insert_sibling(["3"])
+        four = three.insert_sibling([""])
+        five = four.insert_sibling()
+        model = Model(TestView([]), one)
+        model._Model__cursor_y = 0
+        model._Model__cursor_x = 8
+        model.move(down)
+        self.assertEqual(model._Model__cursor_x, 3)
+        self.assertEqual(model._Model__cursor_y, 1)
+        model.move(down)
+        self.assertEqual(model._Model__cursor_x, 1)
+        self.assertEqual(model._Model__cursor_y, 2)
+        model.move(down)
+        self.assertEqual(model._Model__cursor_x, 0)
+        self.assertEqual(model._Model__cursor_y, 3)
+        model.move(down)
+        self.assertEqual(model._Model__cursor_x, 0)
+        self.assertEqual(model._Model__cursor_y, 4)
 
     def test_move_end(self):
         right = LateralDirection.RIGHT
@@ -663,6 +687,29 @@ class MyTestCase(unittest.TestCase):
         target = "root\n" \
                  + "    one      two    three\n" \
                  + "    \n" \
+                 + "        two\n" \
+                 + "    three\n"
+        actual = str(root)
+        self.assertEqual(actual, target)
+
+    def test_split_node_start(self):
+        root = NestedList(["root"])
+        one = root.insert_child(["one", "two", "three"])
+        one.insert_child(["two"])
+        one.insert_sibling(["three"])
+        model = Model(TestView([]), root)
+        target = "root\n" \
+                 + "    one      two    three\n" \
+                 + "        two\n" \
+                 + "    three\n"
+        actual = str(root)
+        self.assertEqual(actual, target)
+        model._Model__cursor_y = 1
+        model._Model__cursor_x = 4
+        model.split_node()
+        target = "root\n" \
+                 + "    \n" \
+                 + "    one      two    three\n" \
                  + "        two\n" \
                  + "    three\n"
         actual = str(root)

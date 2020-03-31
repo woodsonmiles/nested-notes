@@ -5,6 +5,10 @@ from abc import ABC, abstractmethod
 class View(ABC):
 
     @abstractmethod
+    def signal_user_error(self):
+        pass
+
+    @abstractmethod
     def get_size(self) -> (int,int):
         pass
 

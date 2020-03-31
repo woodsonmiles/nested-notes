@@ -164,7 +164,10 @@ class Model(object):
                 All but last field has trailing tab
                 """
                 if field_index == 0:
-                    style = Styles.HEADER
+                    if node.collapsed:
+                        style = Styles.COLLAPSED_HEADER
+                    else:
+                        style = Styles.HEADER
                 elif field_index % 2:
                     style = Styles.EVEN
                 else:
@@ -220,6 +223,10 @@ class Model(object):
             return False
         previous: NestedList = self.__get_node(-1)
         return previous.child is current
+
+    @property
+    def current_node_has_child(self) -> bool:
+        return self.__get_node().has_child
 
     def indent_current_node(self):
         """
@@ -364,4 +371,7 @@ class Model(object):
 
     def get_level(self) -> int:
         return self.__get_node().level
+
+    def toggle_current_node_collapsed(self):
+        self.__get_node().toggle_collapsed()
 

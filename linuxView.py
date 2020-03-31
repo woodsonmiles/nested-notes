@@ -12,6 +12,7 @@ class LinuxView(View, ABC):
         curses.init_pair(Styles.ODD, curses.COLOR_CYAN, curses.COLOR_BLACK)
         curses.init_pair(Styles.EVEN, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(Styles.HEADER, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(Styles.COLLAPSED_HEADER, curses.COLOR_WHITE, curses.COLOR_RED)
 
     def get_size(self):
         return self.__window.getmaxyx()
@@ -31,4 +32,7 @@ class LinuxView(View, ABC):
 
     def refresh(self):
         self.__window.refresh()
+
+    def signal_user_error(self):
+        curses.beep()
 
