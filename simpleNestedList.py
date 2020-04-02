@@ -232,6 +232,10 @@ class SimpleNestedList(object):
         return iter(self.__row)
 
     @property
+    def unpadded_row_iter(self):
+        return self.__row.unpadded_iter
+
+    @property
     def width(self) -> int:
         """
         :return: num characters in string representation of fields including indentation and separation

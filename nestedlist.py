@@ -1,6 +1,7 @@
 from typing import List
 from directions import LateralDirection
 from simpleNestedList import SimpleNestedList
+import json
 
 
 class NestedList(SimpleNestedList):
@@ -242,18 +243,31 @@ class NestedList(SimpleNestedList):
             previous_node.append_field(field)
         del prev_sibling.sibling
 
-    """
-    def give_fields(self, prev_row, prev_sibling):
-        assert prev_row is not None
-        prev_sibling._set_sibling(self.__sibling)
-        last_child = prev_sibling.get_last_child()
-        if last_child is self.__null():
-            prev_sibling._set_child(self.__child)
-        else:
-            last_child._set_sibling(self.__child)
-        for field in self.__fields:
-            prev_row.append_field(field.get_text())
-    """
+    def save(self, file_path):
+        pickle = self.__serialize()
+        with open(file_path, 'w') as file:
+            file.write(json.dumps(pickle))
+
+    def __serialize(self) -> dict:
+        pickle = {
+            "fields": self.fields,
+            "child": self.child.__serialize(),
+            "sibling": self.sibling.__serialize()
+        }
+
+    @classmethod
+    def deserialize(cls, pickle: dict) -> SimpleNestedList:
+        node = NestedList(pickle.fields)
+        node.deserialize_helper(pickle, node)
+
+    def deserialize_helper(self, pickle: dict, node: SimpleNestedList):
+        if pickle.has_key('child'):
+            child = node.insert_child(pickle['child']['fields'])
+            child.deserialize_helper(pickle['child'], child)
+        if pickle.has_key('sibling'):
+            sibling = node.insert_sibling(pickle['sibling']['fields'])
+            sibling.deserialize_helper(pickle['sibling'], sibling)
+
 
 
 class NestedListIterator:
