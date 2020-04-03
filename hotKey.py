@@ -380,3 +380,16 @@ class Esc(HotKey):
                 sys.exit()
 
         return [EscEffect()]
+
+class CtrlS(HotKey):
+    @property
+    def key_combination(self) -> str:
+        return 'ctrl+s'
+
+    def _init_key_effects(self) -> List[KeyEffect]:
+        class Save(KeyEffect):
+            def is_relevant(self, model: Model) -> bool:
+                return True
+
+            def execute(self, model: Model):
+                model.save()

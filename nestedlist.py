@@ -1,7 +1,6 @@
 from typing import List
 from directions import LateralDirection
 from simpleNestedList import SimpleNestedList
-import json
 
 
 class NestedList(SimpleNestedList):
@@ -233,7 +232,6 @@ class NestedList(SimpleNestedList):
         new_sibling._insert_child_deep(self.child)
         del self.child
 
-
     def combine(self, previous_node: SimpleNestedList, prev_sibling: SimpleNestedList):
         """
         Removes this row from its tree and adds its fields to previous_node
@@ -243,31 +241,28 @@ class NestedList(SimpleNestedList):
             previous_node.append_field(field)
         del prev_sibling.sibling
 
-    def save(self, file_path):
-        pickle = self.__serialize()
-        with open(file_path, 'w') as file:
-            file.write(json.dumps(pickle))
+    # Serialization
 
-    def __serialize(self) -> dict:
-        pickle = {
+    def serialize(self) -> dict:
+        return {
             "fields": self.fields,
-            "child": self.child.__serialize(),
-            "sibling": self.sibling.__serialize()
+            "child": self.child.serialize(),
+            "sibling": self.sibling.serialize()
         }
 
     @classmethod
     def deserialize(cls, pickle: dict) -> SimpleNestedList:
-        node = NestedList(pickle.fields)
-        node.deserialize_helper(pickle, node)
+        node = NestedList(pickle['fields'])
+        node._deserialize_helper(pickle)
+        return node
 
-    def deserialize_helper(self, pickle: dict, node: SimpleNestedList):
-        if pickle.has_key('child'):
-            child = node.insert_child(pickle['child']['fields'])
-            child.deserialize_helper(pickle['child'], child)
-        if pickle.has_key('sibling'):
-            sibling = node.insert_sibling(pickle['sibling']['fields'])
-            sibling.deserialize_helper(pickle['sibling'], sibling)
-
+    def _deserialize_helper(self, pickle: dict):
+        if pickle['child'] is not None:
+            child = self.insert_child(pickle['child']['fields'])
+            child._deserialize_helper(pickle['child'])
+        if pickle['sibling'] is not None:
+            sibling = self.insert_sibling(pickle['sibling']['fields'])
+            sibling._deserialize_helper(pickle['sibling'])
 
 
 class NestedListIterator:
@@ -416,3 +411,9 @@ class NullNestedList(NestedList):
 
     def _append_child(self, new_child):
         raise Exception("Should not be called on a NullNestedList")
+
+    def serialize(self) -> dict:
+        return None
+
+    def _deserialize_helper(self, pickle: dict):
+        pass

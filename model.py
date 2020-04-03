@@ -2,13 +2,17 @@ from directions import VerticalDirection, LateralDirection, Direction
 from view import View
 from styles import Styles
 from nestedlist import NestedList, NullNestedList
+import json
+import os.path
 
 
 class Model(object):
 
     __tab: str = "    "
 
-    def __init__(self, view: View, root: NestedList = None):
+    __file_extention = '.nn'
+
+    def __init__(self, view: View, file_path: str = None, root: NestedList = None):
         """
         Attributes
             max_lines: Maximum visible line count for `result_window`
@@ -40,20 +44,17 @@ class Model(object):
         self.__cursor_y = 0
         self.__cursor_x = 0
         # Start of Nested List
-        if root is None:
-            self.__root: NestedList = self.__init_display()
-        else:
+        self.__root = NestedList()
+        if file_path is not None:
+            self.__file_path = file_path
+            if os.path.exists(file_path):
+                self.__root = self.load(file_path)
+            else:
+                self.save(file_path)
+        elif root is not None:
             self.__root = root
-        self.__page = self.__root.count() // self.__window_rows
 
-    @staticmethod
-    def __init_display() -> NestedList:
-        root = NestedList(["Information about the bean"])
-        root.insert_child(["The Bean", "Yes!", "Certainly", "Seldom", "Yum"])
-        root.insert_child(["Lima Bean", "Um?", "Totes", "Nope", "Debate-skies"])
-        root.insert_child(["This Bean", "I hope", "10/10", "Yep", "1/10"])
-        root.insert_child(["Subject", "Good", "Bean-like", "Squidgely", "Grumpy", "Cookery"])
-        return root
+        self.__page = self.__root.count() // self.__window_rows
 
     @property
     def __bottom(self) -> int:
@@ -375,3 +376,17 @@ class Model(object):
     def toggle_current_node_collapsed(self):
         self.__get_node().toggle_collapsed()
 
+    def save(self, file_path: str = None):
+        if file_path is None:
+            file_path = self.__file_path
+        if not file_path.endswith(self.__file_extention):
+            file_path += self.__file_extention
+        pickle = self.__root.serialize()
+        with open(file_path, 'w') as file:
+            file.write(json.dumps(pickle, indent=4))
+
+    def load(self, file_path: str) -> NestedList:
+        assert file_path.endswith(self.__file_extention)
+        with open(file_path, 'r') as file:
+            pickle = json.load(file)
+        return NestedList.deserialize(pickle)

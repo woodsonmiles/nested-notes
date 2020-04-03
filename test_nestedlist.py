@@ -290,6 +290,39 @@ class TestNestedList(unittest.TestCase):
                  + "\n"
         self.__comp_str_to_node(one, target)
 
+    def test_serialization_simple(self):
+        one = NestedList(["one", "two", "three"])
+        pickle = one.serialize()
+        copy = NestedList._NestedList__deserialize(pickle)
+        self.assertEqual(str(one), str(copy))
+        self.assertEqual(one, copy)
+
+    def test_serialization_complex(self):
+        root = NestedList(["one", "two", "three"])
+        child = root.insert_child(["child1", "child2"])
+        grandchild = child.insert_child(["gc1"])
+        grandchild.insert_sibling(["gc2", "gc2"])
+        sibling = root.insert_sibling()
+        sibling.insert_sibling(["sib2", "sib2"])
+
+        pickle = root.serialize()
+        copy = NestedList._NestedList__deserialize(pickle)
+        self.assertEqual(str(root), str(copy))
+        self.assertEqual(root, copy)
+
+    def test_save_and_load(self):
+        root = NestedList(["one", "two", "three"])
+        child = root.insert_child(["child1", "child2"])
+        grandchild = child.insert_child(["gc1"])
+        grandchild.insert_sibling(["gc2", "gc2"])
+        sibling = root.insert_sibling()
+        sibling.insert_sibling(["sib2", "sib2"])
+        file_path = '/tmp/nestedlist.json'
+        root.save(file_path)
+        copy = NestedList.load(file_path)
+        self.assertEqual(str(root), str(copy))
+        self.assertEqual(root, copy)
+
 
 if __name__ == '__main__':
     unittest.main()
