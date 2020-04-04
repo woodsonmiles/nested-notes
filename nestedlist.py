@@ -251,7 +251,7 @@ class NestedList(SimpleNestedList):
         }
 
     @classmethod
-    def deserialize(cls, pickle: dict) -> SimpleNestedList:
+    def deserialize(cls, pickle: dict):
         node = NestedList(pickle['fields'])
         node._deserialize_helper(pickle)
         return node

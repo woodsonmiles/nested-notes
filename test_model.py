@@ -715,6 +715,22 @@ class MyTestCase(unittest.TestCase):
         actual = str(root)
         self.assertEqual(actual, target)
 
+    def test_save_and_load(self):
+        root = NestedList(["one", "two", "three"])
+        child = root.insert_child(["child1", "child2"])
+        grandchild = child.insert_child(["gc1"])
+        grandchild.insert_sibling(["gc2", "gc2"])
+        sibling = root.insert_sibling()
+        sibling.insert_sibling(["sib2", "sib2"])
+        file_path = '/tmp/nestedlist.nnn'
+        model = Model(TestView([]), root=root)
+        model.save(file_path)
+        del model
+        model = Model(TestView([]), file_path)
+        copy = model._Model__root
+        self.assertEqual(str(root), str(copy))
+        self.assertEqual(root, copy)
+
 
 if __name__ == '__main__':
     unittest.main()

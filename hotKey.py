@@ -23,7 +23,10 @@ class HotKey(ABC):
 
     @property
     @abstractmethod
-    def key_combination(self) -> str:
+    def key_combination(self):
+        """
+        String or integer representing the combination of keys that should activate the hotkey
+        """
         pass
 
     @property
@@ -63,16 +66,15 @@ class HotKey(ABC):
 
 class Tab(HotKey):
     @property
-    def key_combination(self) -> str:
-        return 'tab'
+    def key_combination(self):
+        return 15
 
     def _init_key_effects(self) -> List[KeyEffect]:
         class Indent(KeyEffect):
             def is_relevant(self, model: Model):
                 return model.at_line_start() and not model.is_first_child()
 
-            def execute(self, model: Model):
-                model.indent_current_node()
+            def execute(self, model: Model):                model.indent_current_node()
 
         class Split(KeyEffect):
             def is_relevant(self, model: Model):
@@ -381,6 +383,7 @@ class Esc(HotKey):
 
         return [EscEffect()]
 
+
 class CtrlS(HotKey):
     @property
     def key_combination(self) -> str:
@@ -393,3 +396,4 @@ class CtrlS(HotKey):
 
             def execute(self, model: Model):
                 model.save()
+        return [Save()]

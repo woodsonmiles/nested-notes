@@ -10,7 +10,7 @@ class Model(object):
 
     __tab: str = "    "
 
-    __file_extention = '.nn'
+    __file_extension = '.nnn'
 
     def __init__(self, view: View, file_path: str = None, root: NestedList = None):
         """
@@ -379,14 +379,14 @@ class Model(object):
     def save(self, file_path: str = None):
         if file_path is None:
             file_path = self.__file_path
-        if not file_path.endswith(self.__file_extention):
-            file_path += self.__file_extention
+        if not file_path.endswith(self.__file_extension):
+            file_path += self.__file_extension
         pickle = self.__root.serialize()
         with open(file_path, 'w') as file:
             file.write(json.dumps(pickle, indent=4))
 
     def load(self, file_path: str) -> NestedList:
-        assert file_path.endswith(self.__file_extention)
+        assert file_path.endswith(self.__file_extension)
         with open(file_path, 'r') as file:
             pickle = json.load(file)
         return NestedList.deserialize(pickle)
