@@ -8,8 +8,14 @@ class View(ABC):
     def signal_user_error(self):
         pass
 
+    @property
     @abstractmethod
-    def get_size(self) -> (int,int):
+    def num_columns(self):
+        pass
+
+    @property
+    @abstractmethod
+    def num_rows(self):
         pass
 
     @abstractmethod

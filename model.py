@@ -38,7 +38,6 @@ class Model(object):
             └--------------------------------------┘
         """
         self.__view = view
-        self.__window_rows, self.__window_cols = self.__view.get_size()
         self.__top = 0
         # current cursor position on window
         self.__cursor_y = 0
@@ -54,7 +53,17 @@ class Model(object):
         elif root is not None:
             self.__root = root
 
-        self.__page = self.__root.count() // self.__window_rows
+    @property
+    def __window_rows(self):
+        return self.__view.num_rows
+
+    @property
+    def __window_columns(self):
+        return self.__view.num_columns
+
+    @property
+    def __page(self):
+        return self.__root.count() // self.__window_rows
 
     @property
     def __bottom(self) -> int:

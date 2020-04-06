@@ -1,7 +1,7 @@
 from directions import LateralDirection, VerticalDirection
 from model import Model
 from typing import List
-import keyboard
+from keyboard import keyboard
 from abc import abstractmethod, ABC
 from keyEffect import KeyEffect
 import sys

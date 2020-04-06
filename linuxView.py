@@ -14,8 +14,15 @@ class LinuxView(View, ABC):
         curses.init_pair(Styles.HEADER, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(Styles.COLLAPSED_HEADER, curses.COLOR_WHITE, curses.COLOR_RED)
 
-    def get_size(self):
-        return self.__window.getmaxyx()
+    @property
+    def num_columns(self):
+        rows, cols = self.__window.getmaxyx()
+        return cols
+
+    @property
+    def num_rows(self):
+        rows, cols = self.__window.getmaxyx()
+        return rows
 
     def addstr(self, y: int, x: int, string: str, style: Styles):
         self.__window.addstr(y, x, string, curses.color_pair(style))
