@@ -385,6 +385,10 @@ class Model(object):
     def toggle_current_node_collapsed(self):
         self.__get_node().toggle_collapsed()
 
+    @property
+    def collapsed(self) -> bool:
+        return self.__get_node().collapsed
+
     def save(self, file_path: str = None):
         if file_path is None:
             file_path = self.__file_path
