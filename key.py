@@ -1,63 +1,77 @@
 from enum import Enum, auto
-from typing import List
 import curses
+from curses import ascii
 import platform
-
-class Key(object):
-
-    __synonyms = {
-        351: [351, 353]
-    }
-
-    @property
-    def synonyms(self) -> List[int]:
-        """
-        Return a list of all integer keys that equal this key.
-        If there are no synonyms, return a list containing only this integer key
-        """
-        self.__synonyms.get(self.__key, [self.__key])
-
-    def __init__(self, key: int):
-        self.__key: int = key
-
-    def __eq__(self, other):
-        if not isinstance(other, Key):
-            return False
-        return other.__key in self.synonyms
-
-    @classmethod
-    def enter(cls):
-        return Key(10)
-
-    @classmethod
-    def backspace(cls):
-        return curses.KEY_BACKSPACE
-
-    @classmethod
-    def tab(cls):
-        return 9
-
-    @classmethod
-    def shift_tab(cls):
-        return 351
 
 
 class Key(Enum):
     ENTER = auto()
     BACKSPACE = auto()
+    DELETE = auto()
     TAB = auto()
+    SHIFT_TAB = auto()
+    PAGE_UP = auto()
+    PAGE_DOWN = auto()
+    HOME = auto()
+    END = auto()
+    LEFT = auto()
+    RIGHT = auto()
+    UP = auto()
+    DOWN = auto()
+    CTRL_RIGHT = auto()
+    CTRL_LEFT = auto()
+    CTRL_K = auto()
+    CTRL_W = auto()
+    ESC = auto()
 
 
 class KeyMap(object):
+    """
+    Ensures that keys are mapped to the right integer value given by curses.getch() independent of platform
+    """
+    __instance = None
+
+    @staticmethod
+    def get_instance():
+        if KeyMap.__instance is None:
+            KeyMap.__instance = KeyMap()
+        return KeyMap.__instance
+
     def __init__(self):
+        if KeyMap.__instance is not None:
+            raise Exception("This class is a singleton")
         self.__map = self.__init_map()
 
     @staticmethod
-    def __init_map(self) -> dict:
+    def __init_map() -> dict:
+        key_map = {
+            Key.ENTER: curses.KEY_ENTER,
+            Key.BACKSPACE: curses.KEY_BACKSPACE,
+            Key.DELETE: curses.KEY_DC,
+            Key.TAB: 9,
+            Key.SHIFT_TAB: 353,
+            Key.PAGE_UP: curses.KEY_PPAGE,
+            Key.PAGE_DOWN: curses.KEY_NPAGE,
+            Key.HOME: curses.KEY_HOME,
+            Key.END: curses.KEY_END,
+            Key.LEFT: curses.KEY_LEFT,
+            Key.RIGHT: curses.KEY_RIGHT,
+            Key.UP: curses.KEY_UP,
+            Key.DOWN: curses.KEY_DOWN,
+            Key.CTRL_RIGHT: 560,
+            Key.CTRL_LEFT: 545,
+            Key.CTRL_K: 12,
+            Key.CTRL_W: 23,
+            Key.ESC: curses.ascii.esc
+            }
+        # Correct differences for windows
         if platform.system() == 'Windows':
-            return {}
-        else:
-            return {}
+            key_map[Key.BACKSPACE] = 8
+            key_map[Key.SHIFT_TAB] = 351
+        return key_map
 
     def value(self, key) -> int:
-        return self.__map.get(key, )
+        try:
+            return self.__map[key]
+        except KeyError:
+            raise Exception("{} not defined in key map".format(key))

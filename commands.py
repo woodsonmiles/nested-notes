@@ -1,13 +1,18 @@
 from model import Model
 from directions import VerticalDirection, LateralDirection
 from abc import abstractmethod, ABC
-
+from key import KeyMap, Key
 import curses
 import curses.ascii
 import sys
 
 
 class KeyCommand(ABC):
+
+    @property
+    def key_map(self):
+        return KeyMap.get_instance()
+
     @abstractmethod
     def is_relevant(self, key: int, model: Model):
         pass
@@ -19,7 +24,7 @@ class KeyCommand(ABC):
 
 class NewLine(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == 10
+        return key == self.key_map.value(Key.ENTER)
 
     def execute(self, key: int, model: Model):
         model.split_node()
@@ -35,7 +40,7 @@ class BackspaceNewline(KeyCommand):
 
 class IndentTab(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == 9 and model.at_line_start() and not model.is_first_child()
+        return key == self.key_map.value(Key.TAB) and model.at_line_start() and not model.is_first_child()
 
     def execute(self, key: int, model: Model):
         model.indent_current_node()
@@ -43,7 +48,7 @@ class IndentTab(KeyCommand):
 
 class SplitTab(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == 9 and not model.at_line_start()
+        return key == self.key_map.value(Key.TAB) and not model.at_line_start()
 
     def execute(self, key: int, model: Model):
         model.split_field()
@@ -51,8 +56,8 @@ class SplitTab(KeyCommand):
 
 class UnIndent(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return not model.at_root() and (key == curses.KEY_BACKSPACE and model.at_line_start()) \
-               or key == 353 or key == 351
+        return not model.at_root() and (key == self.key_map.value(Key.BACKSPACE) and model.at_line_start()) \
+               or key == self.key_map.value(Key.SHIFT_TAB)
 
     def execute(self, key: int, model: Model):
         model.unindent_current_node()
@@ -60,7 +65,7 @@ class UnIndent(KeyCommand):
 
 class UnSplitBackspace(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_BACKSPACE and not model.at_line_start() and model.at_field_end(LateralDirection.LEFT)
+        return key == self.key_map.value(Key.BACKSPACE) and not model.at_line_start() and model.at_field_end(LateralDirection.LEFT)
 
     def execute(self, key: int, model: Model):
         model.combine_fields(LateralDirection.LEFT)
@@ -68,7 +73,7 @@ class UnSplitBackspace(KeyCommand):
 
 class UnSplitDelete(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_DC and not model.at_line_end() \
+        return key == self.key_map.value(Key.DELETE) and not model.at_line_end() \
                and model.at_field_end(LateralDirection.RIGHT)
 
     def execute(self, key: int, model: Model):
@@ -77,7 +82,7 @@ class UnSplitDelete(KeyCommand):
 
 class Insert(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return 31 < key < 127  # printable char range
+        return 31 < key < 127  # printable char ascii range
 
     def execute(self, key: int, model: Model):
         model.insert(chr(key))
@@ -85,7 +90,7 @@ class Insert(KeyCommand):
 
 class TextBackspace(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_BACKSPACE and not model.at_field_end(LateralDirection.LEFT)
+        return key == self.key_map.value(Key.BACKSPACE) and not model.at_field_end(LateralDirection.LEFT)
 
     def execute(self, key: int, model: Model):
         model.delete(-1)
@@ -93,7 +98,7 @@ class TextBackspace(KeyCommand):
 
 class TextDelete(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_DC and not model.at_field_end(LateralDirection.RIGHT)
+        return key == self.key_map.value(Key.DELETE) and not model.at_field_end(LateralDirection.RIGHT)
 
     def execute(self, key: int, model: Model):
         model.delete(0)
@@ -101,7 +106,7 @@ class TextDelete(KeyCommand):
 
 class PageUp(KeyCommand):
     def is_relevant(self, key: int, model: Model) -> bool:
-        return key == curses.KEY_PPAGE
+        return key == self.key_map.value(Key.PAGE_UP)
 
     def execute(self, key, model: Model):
         model.page(VerticalDirection.UP)
@@ -109,7 +114,7 @@ class PageUp(KeyCommand):
 
 class Home(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_HOME
+        return key == self.key_map.value(Key.HOME)
 
     def execute(self, key: int, model: Model):
         model.move_end(LateralDirection.LEFT)
@@ -117,7 +122,7 @@ class Home(KeyCommand):
 
 class End(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_END
+        return key == self.key_map.value(Key.END)
 
     def execute(self, key: int, model: Model):
         model.move_end(LateralDirection.RIGHT)
@@ -125,7 +130,7 @@ class End(KeyCommand):
 
 class PageDn(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_NPAGE
+        return key == self.key_map.value(Key.PAGE_DOWN)
 
     def execute(self, key: int, model: Model):
         model.page(VerticalDirection.DOWN)
@@ -133,7 +138,7 @@ class PageDn(KeyCommand):
 
 class Up(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_UP
+        return key == self.key_map.value(Key.UP)
 
     def execute(self, key: int, model: Model):
         model.move(VerticalDirection.UP)
@@ -141,7 +146,7 @@ class Up(KeyCommand):
 
 class Left(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_LEFT
+        return key == self.key_map.value(Key.LEFT)
 
     def execute(self, key: int, model: Model):
         model.move(LateralDirection.LEFT)
@@ -149,7 +154,7 @@ class Left(KeyCommand):
 
 class Right(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_RIGHT
+        return key == self.key_map.value(Key.RIGHT)
 
     def execute(self, key: int, model: Model):
         padding_len: int = model.get_padding_len()
@@ -162,7 +167,7 @@ class Right(KeyCommand):
 
 class CtrLeft(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == 545
+        return key == self.key_map.value(Key.CTRL_LEFT)
 
     def execute(self, key: int, model: Model):
         left = LateralDirection.LEFT
@@ -174,7 +179,7 @@ class CtrLeft(KeyCommand):
 
 class CtrRight(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == 560 and not model.at_line_end()
+        return key == self.key_map.value(Key.CTRL_RIGHT) and not model.at_line_end()
 
     def execute(self, key: int, model: Model):
         right = LateralDirection.RIGHT
@@ -186,7 +191,7 @@ class CtrRight(KeyCommand):
 
 class Down(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.KEY_DOWN
+        return key == self.key_map.value(Key.DOWN)
 
     def execute(self, key: int, model: Model):
         model.move(VerticalDirection.DOWN)
@@ -194,7 +199,7 @@ class Down(KeyCommand):
 
 class Esc(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == curses.ascii.ESC
+        return key == self.key_map.value(Key.ESC)
 
     def execute(self, key: int, model: Model):
         sys.exit()
@@ -202,8 +207,8 @@ class Esc(KeyCommand):
 
 class ToggleCollapse(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        # Ctrl + k or enter when node is collapsed
-        return model.current_node_has_child and key == 12 or (key == 10 and model.collapsed)
+        return model.current_node_has_child and key == self.key_map.value(Key.CTRL_K) or \
+               (key == self.key_map.value(Key.ENTER) and model.collapsed)
 
     def execute(self, key: int, model: Model):
         model.toggle_current_node_collapsed()
@@ -211,7 +216,7 @@ class ToggleCollapse(KeyCommand):
 
 class Save(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return key == 23  # Ctrl + w
+        return key == self.key_map.value(Key.CTRL_W)
 
     def execute(self, key: int, model: Model):
         model.save()
