@@ -1,6 +1,7 @@
+from enum import Enum, auto
 from typing import List
 import curses
-
+import platform
 
 class Key(object):
 
@@ -39,3 +40,24 @@ class Key(object):
     @classmethod
     def shift_tab(cls):
         return 351
+
+
+class Key(Enum):
+    ENTER = auto()
+    BACKSPACE = auto()
+    TAB = auto()
+
+
+class KeyMap(object):
+    def __init__(self):
+        self.__map = self.__init_map()
+
+    @staticmethod
+    def __init_map(self) -> dict:
+        if platform.system() == 'Windows':
+            return {}
+        else:
+            return {}
+
+    def value(self, key) -> int:
+        return self.__map.get(key, )
