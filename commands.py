@@ -2,8 +2,6 @@ from model import Model
 from directions import VerticalDirection, LateralDirection
 from abc import abstractmethod, ABC
 from key import KeyMap, Key
-import curses
-import curses.ascii
 import sys
 
 
@@ -32,7 +30,7 @@ class NewLine(KeyCommand):
 
 class BackspaceNewline(KeyCommand):
     def is_relevant(self, key: int, model: Model):
-        return model.get_level() == 0 and key == curses.KEY_BACKSPACE and model.at_line_start() and not model.at_root()
+        return model.get_level() == 0 and key == self.key_map.value(Key.BACKSPACE) and model.at_line_start() and not model.at_root()
 
     def execute(self, key: int, model: Model):
         model.combine_nodes()

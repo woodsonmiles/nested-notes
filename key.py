@@ -45,7 +45,7 @@ class KeyMap(object):
     @staticmethod
     def __init_map() -> dict:
         key_map = {
-            Key.ENTER: curses.KEY_ENTER,
+            Key.ENTER: 10,
             Key.BACKSPACE: curses.KEY_BACKSPACE,
             Key.DELETE: curses.KEY_DC,
             Key.TAB: 9,
@@ -62,7 +62,7 @@ class KeyMap(object):
             Key.CTRL_LEFT: 545,
             Key.CTRL_K: 12,
             Key.CTRL_W: 23,
-            Key.ESC: curses.ascii.esc
+            Key.ESC: curses.ascii.ESC
             }
         # Correct differences for windows
         if platform.system() == 'Windows':
