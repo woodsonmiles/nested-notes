@@ -60,7 +60,7 @@ class KeyMap(object):
             Key.DOWN: curses.KEY_DOWN,
             Key.CTRL_RIGHT: 560,
             Key.CTRL_LEFT: 545,
-            Key.CTRL_K: 12,
+            Key.CTRL_K: 11,
             Key.CTRL_W: 23,
             Key.ESC: curses.ascii.ESC
             }
