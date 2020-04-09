@@ -12,7 +12,6 @@ class Controller(object):
         while True:
             self.model.display()
             key: int = self.model.input_char
-            breakpoint()
             Commands.execute(key, self.model)
 
     def run(self):
