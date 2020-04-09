@@ -1,4 +1,4 @@
-from column import Column
+from nestingnote.column import Column
 from typing import List
 
 

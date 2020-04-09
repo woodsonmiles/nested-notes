@@ -1,8 +1,8 @@
 import unittest
-from model import Model
-from testView import TestView
-from nestedlist import NestedList
-from directions import LateralDirection, VerticalDirection
+from nestingnote.model import Model
+from nestingnote.testView import TestView
+from nestingnote.nestedlist import NestedList
+from nestingnote.directions import LateralDirection, VerticalDirection
 
 
 class MyTestCase(unittest.TestCase):

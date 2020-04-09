@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import unittest
-from nestedlist import NestedList, NullNestedList
+from nestingnote.nestedlist import NestedList, NullNestedList
 from typing import List
 
 

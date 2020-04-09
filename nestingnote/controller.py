@@ -1,5 +1,5 @@
-from commands import Commands
-from model import Model
+from nestingnote.commands import Commands
+from nestingnote.model import Model
 
 
 class Controller(object):

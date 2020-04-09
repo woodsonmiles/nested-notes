@@ -1,6 +1,6 @@
 from typing import List
-from directions import LateralDirection
-from simpleNestedList import SimpleNestedList
+from nestingnote.directions import LateralDirection
+from nestingnote.simpleNestedList import SimpleNestedList
 
 
 class NestedList(SimpleNestedList):

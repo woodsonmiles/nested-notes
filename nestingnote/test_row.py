@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import unittest
-from row import Row
+from nestingnote.row import Row
 from typing import List
 
 

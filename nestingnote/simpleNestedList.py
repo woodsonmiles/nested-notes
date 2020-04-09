@@ -1,6 +1,6 @@
 from typing import List
-from row import Row
-from column import Column
+from nestingnote.row import Row
+from nestingnote.column import Column
 
 
 class SimpleNestedList(object):

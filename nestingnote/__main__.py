@@ -1,8 +1,8 @@
 #!/usr/bin/python3
-from model import Model
-from linuxView import LinuxView
+from nestingnote.model import Model
+from nestingnote.linuxView import LinuxView
 from curses import wrapper
-from controller import Controller
+from nestingnote.controller import Controller
 from sys import argv
 
 

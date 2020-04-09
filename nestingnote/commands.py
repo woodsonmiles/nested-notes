@@ -1,7 +1,7 @@
-from model import Model
-from directions import VerticalDirection, LateralDirection
+from nestingnote.model import Model
+from nestingnote.directions import VerticalDirection, LateralDirection
 from abc import abstractmethod, ABC
-from key import KeyMap, Key
+from nestingnote.key import KeyMap, Key
 import sys
 
 

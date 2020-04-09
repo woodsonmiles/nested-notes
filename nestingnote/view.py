@@ -1,4 +1,4 @@
-from styles import Styles
+from nestingnote.styles import Styles
 from abc import ABC, abstractmethod
 
 

@@ -1,8 +1,8 @@
 import curses
 from abc import ABC
 
-from styles import Styles
-from view import View
+from nestingnote.styles import Styles
+from nestingnote.view import View
 
 
 class LinuxView(View, ABC):

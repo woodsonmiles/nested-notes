@@ -1,5 +1,5 @@
-from styles import Styles
-from view import View
+from nestingnote.styles import Styles
+from nestingnote.view import View
 from typing import List
 
 

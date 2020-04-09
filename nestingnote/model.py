@@ -1,7 +1,7 @@
-from directions import VerticalDirection, LateralDirection, Direction
-from view import View
-from styles import Styles
-from nestedlist import NestedList, NullNestedList
+from nestingnote.directions import VerticalDirection, LateralDirection, Direction
+from nestingnote.view import View
+from nestingnote.styles import Styles
+from nestingnote.nestedlist import NestedList, NullNestedList
 import json
 import os.path
 
