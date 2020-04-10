@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="nestingnote",
-    version="0.0.2",
+    version="0.0.8",
     author="Woodson Miles",
     author_email="woodomiles@gmail.com",
     description="Terminal note-taking application",
@@ -20,5 +20,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>3.6',
-    install_requires=[] + ( ["windows-curses"] if platform.startwith("win") else []
+    install_requires=[
+        "windows-curses == 2.1.0;platform_system=='Windows'"
+    ]
 )
