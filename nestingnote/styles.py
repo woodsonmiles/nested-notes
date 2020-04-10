@@ -7,3 +7,4 @@ class Styles(IntEnum):
     ODD = 2
     EVEN = 3
     COLLAPSED_HEADER = 4
+    BANNER = 5

@@ -13,6 +13,7 @@ class LinuxView(View, ABC):
         curses.init_pair(Styles.EVEN, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(Styles.HEADER, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(Styles.COLLAPSED_HEADER, curses.COLOR_WHITE, curses.COLOR_RED)
+        curses.init_pair(Styles.BANNER, curses.COLOR_WHITE, curses.COLOR_CYAN)
 
     @property
     def num_columns(self):
