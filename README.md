@@ -2,7 +2,7 @@
 - Windows
     1. [Download](https://www.python.org/downloads/release/python-382/) and Install Python3
     1. Install pip for Python3
-    1. Install nestingnote
+    1. Install nestingnote<br>
         `pip install nestingnote`
 
 - Linux (varies per distro)
