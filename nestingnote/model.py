@@ -165,10 +165,6 @@ class Model(object):
             row_index = abs_row_index - self.__top
             if row_index >= self.__window_rows:
                 break   # stop at end of window
-            if self.__banner.has_message and row_index == self.__window_rows:
-                # display banner at bottom of window if there is a message to display
-                self.__view.addstr(row_index, self.__banner.message, Styles.BANNER)
-                continue
             # Lines within visible screen
             indent_padding = node.indent_padding
             self.__view.addstr(row_index, 0, indent_padding, Styles.EVEN)
@@ -190,8 +186,10 @@ class Model(object):
                     style = Styles.ODD
                 self.__view.addstr(row_index, printed_chars, text, style)
                 printed_chars += len(text)
+        # banner
+        if self.__banner.has_message:
+            self.__view.addstr(self.__window_rows - 1, 0, self.__banner.message, Styles.BANNER)
         self.__view.move_cursor(self.__cursor_y, self.__cursor_x)
-        self.__view.refresh()
 
     def at_root(self):
         return self.__get_node() is self.__root
