@@ -401,7 +401,7 @@ class Model(object):
         pickle = self.__root.serialize()
         with open(file_path, 'w') as file:
             file.write(json.dumps(pickle, indent=4))
-        self.__banner.message = 'Saving changes to {}'.format(file_path)
+        self.__banner.message = 'Changes saved to {}'.format(file_path)
 
     def load(self, file_path: str) -> NestedList:
         assert file_path.endswith(self.__file_extension)
