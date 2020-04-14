@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="nestingnote",
-    version="0.0.9",
+    version="0.0.11",
     author="Woodson Miles",
     author_email="woodomiles@gmail.com",
     description="Terminal note-taking application",

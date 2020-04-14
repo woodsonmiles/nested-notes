@@ -1,10 +1,11 @@
-### Installation
+### Install Executable
 - Windows
-  1. [Download](https://github.com/woodsonmiles/nestingnote/raw/master/dist/nestingnote.exe)
+  1. [Download](https://github.com/woodsonmiles/nestingnote/raw/master/executable/Windows/nestingnote.exe)
 - Linux (varies per distro)
-  1. Install Python3<br>
-    `sudo apt install python3`
-  1. Install pip for Python3
+  1. [Download](https://github.com/woodsonmiles/nestingnote/raw/master/executable/Linux/nestingnote)
+  1. `chmod +x nestingnote`
+
+### Pip alternative
   1. install nestingnote<br>
     `python3 -m pip install nestingnote`
   1. create alias (for convenience)<br>
