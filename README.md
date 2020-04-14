@@ -1,16 +1,21 @@
 ### Installation
 - Windows
-    1. [Download](https://www.python.org/downloads/release/python-382/) and Install Python3
-    1. Install pip for Python3
-    1. Install nestingnote<br>
-        `pip install nestingnote`
+  1. [Download](https://www.python.org/downloads/release/python-382/) and Install Python3
+  1. Install pip for Python3
+  1. Install nestingnote<br>
+    `pip install nestingnote`
 
 - Linux (varies per distro)
-    1. Install Python3<br>
-        `sudo apt install python3`
-    1. Install pip for Python3
-    1. install nestingnote<br>
-        `python3 -m pip install nestingnote`
+  1. Install Python3<br>
+    `sudo apt install python3`
+  1. Install pip for Python3
+  1. install nestingnote<br>
+    `python3 -m pip install nestingnote`
+  1. create alias (for convenience)<br>
+    ```
+    echo "alias nestingnote='python3 -m nestingnote'" >> ~/.bash_aliases
+    source ~/.bash_aliasees
+    ```    
 ### Execution
     `python3 -m nestingnote \path\to\my\notes`
 ### Controls
