@@ -4,7 +4,7 @@ Nestingnote is a platform-independent terminal-based text-editor for outlining. 
 ### Installation
 - Windows
   1. [Download](https://github.com/woodsonmiles/nestingnote/raw/master/executable/Windows/nestingnote.exe)
-- Linux (varies per distro)
+- Linux
   1. [Download](https://github.com/woodsonmiles/nestingnote/raw/master/executable/Linux/nestingnote)
   1. `chmod +x nestingnote`
 
