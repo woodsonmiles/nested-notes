@@ -1,4 +1,7 @@
-### Install Executable
+### Capabilities
+Nestingnote is a platform-independent terminal-based text-editor for outlining. It's capable of creating collapsable nested lists and matrices ideal for organizing notes and data.
+
+### Installation
 - Windows
   1. [Download](https://github.com/woodsonmiles/nestingnote/raw/master/executable/Windows/nestingnote.exe)
 - Linux (varies per distro)
