@@ -40,7 +40,10 @@ class Model(object):
         """
         self.__banner = OneTimeBanner()
         self.__view = view
+        # The y coordinate that the top of the window starts at
         self.__top = 0
+        # The x coordinate that the left of the window starts at
+        self.__left = 0
         # current cursor position on window
         self.__cursor_y = 0
         self.__cursor_x = 0
@@ -73,6 +76,11 @@ class Model(object):
         return self.__top + self.__window_rows
 
     @property
+    def __abs_cursor_x(self):
+        """x axis index of cursor within text (not screen)"""
+        return self.__cursor_x + self.__left
+
+    @property
     def __abs_cursor_y(self):
         """y axis index of cursor within lines (not screen)"""
         return self.__cursor_y + self.__top
@@ -94,19 +102,19 @@ class Model(object):
         left_limit: int = len(node.indent_padding)
         right_limit: int = node.width
         # put within node
-        if self.__cursor_x < left_limit:
-            self.__cursor_x = left_limit
-        elif self.__cursor_x > right_limit:
-            self.__cursor_x = right_limit
+        if self.__abs_cursor_x < left_limit:
+            self.__abs_cursor_x = left_limit
+        elif self.__abs_cursor_x > right_limit:
+            self.__abs_cursor_x = right_limit
         else:  # cursor is within bounds
-            field_end = node.get_selected_field_end(self.__cursor_x, LateralDirection.RIGHT)
-            if field_end < self.__cursor_x:
+            field_end = node.get_selected_field_end(self.__abs_cursor_x, LateralDirection.RIGHT)
+            if field_end < self.__abs_cursor_x:
                 # if cursor in padding of field, put it at end
-                self.__cursor_x = field_end
+                self.__abs_cursor_x = field_end
 
     def move(self, direction: Direction, num_spaces: int = 1):
         if isinstance(direction, LateralDirection):
-            self.__cursor_x += direction * num_spaces
+            self.__abs_cursor_x += direction * num_spaces
         else:  # VerticalDirection
             if self.__cursor_y == 0 and direction == VerticalDirection.UP \
                     or self.__cursor_y == self.__window_rows - 1 and direction == VerticalDirection.DOWN:
@@ -123,7 +131,7 @@ class Model(object):
 
     def move_field_end(self, direction: LateralDirection):
         node = self.__get_node()
-        self.__cursor_x = node.get_selected_field_end(self.__cursor_x, direction)
+        self.__abs_cursor_x = node.get_selected_field_end(self.__abs_cursor_x, direction)
 
     def scroll(self, direction: VerticalDirection):
         """Moves the screen up or down
@@ -189,7 +197,7 @@ class Model(object):
         # banner
         if self.__banner.has_message:
             self.__view.addstr(self.__window_rows - 1, 0, self.__banner.message, Styles.BANNER)
-        self.__view.move_cursor(self.__cursor_y, self.__cursor_x)
+        self.__view.move_cursor(self.__cursor_y, self.__abs_cursor_x)
 
     def at_root(self):
         return self.__get_node() is self.__root
@@ -198,16 +206,16 @@ class Model(object):
         """
         :return: whether the cursor is at the start of the line (past the indent)
         """
-        return self.__cursor_x == len(self.__get_node().indent_padding)
+        return self.__abs_cursor_x == len(self.__get_node().indent_padding)
 
     def at_line_end(self):
         """
         :return: whether the cursor is at the start of the line (past the indent)
         """
-        return self.__cursor_x == self.__get_node().width
+        return self.__abs_cursor_x == self.__get_node().width
 
     def at_field_end(self, direction: LateralDirection) -> bool:
-        return self.__get_node().get_selected_field_end(self.__cursor_x, direction) == self.__cursor_x
+        return self.__get_node().get_selected_field_end(self.__abs_cursor_x, direction) == self.__abs_cursor_x
 
     def insert(self, insertion: str):
         """
@@ -215,8 +223,8 @@ class Model(object):
         :param insertion: The string to insert
         """
         node: NestedList = self.__get_node()
-        node.insert(self.__cursor_x, insertion)
-        self.__cursor_x += len(insertion)
+        node.insert(self.__abs_cursor_x, insertion)
+        self.__abs_cursor_x += len(insertion)
 
     def delete(self, x_coord_offset: int):
         """
@@ -224,8 +232,8 @@ class Model(object):
         :param x_coord_offset: the offset from the x_coord of the cursor where the character to be deleted is
         """
         node: NestedList = self.__get_node()
-        node.delete_char_at(self.__cursor_x + x_coord_offset)
-        self.__cursor_x += x_coord_offset
+        node.delete_char_at(self.__abs_cursor_x + x_coord_offset)
+        self.__abs_cursor_x += x_coord_offset
 
     def is_first_child(self) -> bool:
         """
@@ -251,12 +259,12 @@ class Model(object):
         previous: NestedList = self.get_previous_sibling()
         node: NestedList = self.__get_node()
         node.indent(previous)
-        self.__cursor_x += len(self.__tab)
+        self.__abs_cursor_x += len(self.__tab)
 
     def unindent_current_node(self):
         parent: NestedList = self.get_parent()
         self.__get_node().unindent(parent)
-        self.__cursor_x -= len(self.__tab)
+        self.__abs_cursor_x -= len(self.__tab)
 
     def get_previous_sibling(self) -> NestedList:
         """
@@ -286,8 +294,8 @@ class Model(object):
 
     def split_field(self):
         node = self.__get_node()
-        node.split_field(self.__cursor_x)
-        self.__cursor_x += self.get_padding_len()
+        node.split_field(self.__abs_cursor_x)
+        self.__abs_cursor_x += self.get_padding_len()
 
     def split_node(self):
         if self.at_line_end() or (not self.at_field_end(LateralDirection.LEFT)
@@ -296,9 +304,9 @@ class Model(object):
         if self.at_field_end(LateralDirection.RIGHT):
             # cursor needs to be on the first field to move over for node.split()
             self.move(LateralDirection.RIGHT, self.get_padding_len())
-        self.__get_node().split(self.__cursor_x)
+        self.__get_node().split(self.__abs_cursor_x)
         self.move(VerticalDirection.DOWN)
-        self.move(LateralDirection.LEFT, self.__cursor_x)
+        self.move(LateralDirection.LEFT, self.__abs_cursor_x)
 
     def combine_nodes(self):
         """
@@ -319,12 +327,12 @@ class Model(object):
         :return: The width of the column at this field
         """
         node = self.__get_node()
-        field_index = node.get_field_index(self.__cursor_x)
+        field_index = node.get_field_index(self.__abs_cursor_x)
         return len(node.get_padded_field(field_index))
 
     def get_field(self) -> str:
         node = self.__get_node()
-        field_index = node.get_field_index(self.__cursor_x)
+        field_index = node.get_field_index(self.__abs_cursor_x)
         return node.get_field(field_index)
 
     def get_neighbor_field(self, direction: LateralDirection) -> str:
@@ -332,7 +340,7 @@ class Model(object):
         :precondition: cursor cannot currently be in the first field and direction be left
         """
         node = self.__get_node()
-        field_index = node.get_field_index(self.__cursor_x)
+        field_index = node.get_field_index(self.__abs_cursor_x)
         return node.get_field(field_index + direction)
 
     def get_padding_len(self) -> int:
@@ -341,7 +349,7 @@ class Model(object):
         were not the last
         """
         node = self.__get_node()
-        field_index = node.get_field_index(self.__cursor_x)
+        field_index = node.get_field_index(self.__abs_cursor_x)
         return node.get_padding_len(field_index)
 
     def get_neighbor_padding_len(self, direction: LateralDirection) -> int:
@@ -352,7 +360,7 @@ class Model(object):
         of the field inhabited by the cursor
         """
         node = self.__get_node()
-        field_index = node.get_field_index(self.__cursor_x)
+        field_index = node.get_field_index(self.__abs_cursor_x)
         return node.get_padding_len(field_index + direction)
 
     def get_neighbor_column_width(self, direction: LateralDirection) -> int:
@@ -363,7 +371,7 @@ class Model(object):
         of the field inhabited by the cursor
         """
         node = self.__get_node()
-        field_index = node.get_field_index(self.__cursor_x)
+        field_index = node.get_field_index(self.__abs_cursor_x)
         return len(node.get_padded_field(field_index + direction))
 
     def combine_fields(self, direction: LateralDirection):
@@ -376,9 +384,9 @@ class Model(object):
         node = self.__get_node()
         # movement must be calculated before node combination, even though only used by left combine
         movement = self.get_neighbor_padding_len(direction)
-        node.combine_fields(self.__cursor_x, direction)
+        node.combine_fields(self.__abs_cursor_x, direction)
         if direction == LateralDirection.LEFT:
-            self.__cursor_x -= movement
+            self.__abs_cursor_x -= movement
 
     def signal_user_error(self):
         self.__view.signal_user_error()
