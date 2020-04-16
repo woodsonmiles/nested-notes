@@ -36,22 +36,55 @@ class TestRow(unittest.TestCase):
         two = Row(columns, fields=["1", "1", "1"])
         self.__test_columns_helper([one, two], [7, 7, 9])
         three = Row(columns, fields=["1234", "1234567", "123"])
+        """
+        123     123        12345
+        1       1          1
+        1234    1234567    123
+        1234567812345678901123456789
+        """
         self.__test_columns_helper([one, two, three], [8, 11, 9])
         del one
+        # one._Row__detach_columns()
         self.__test_columns_helper([two, three], [8, 11, 7])
         del three
+        # three._Row__detach_columns()
+        """
+        1    1    1
+        123451234512345
+        """
         self.__test_columns_helper([two], [5, 5, 5])
+        # creates 1 empty field as a placeholder
         four = Row(columns)
         self.__test_columns_helper([two], [5, 5, 5])
-        four.append("56")
+        four.replace(0, "56")
+        """
+        1     1    1    
+        56    
+        """
         self.__test_columns_helper([two], [6, 5, 5])
         four.insert(0, "567")
+        """
+        1      1    1    
+        567    56    
+        """
         self.__test_columns_helper([two], [7, 6, 5])
         four.insert(2, "5678")
+        """
+        1      1    1    
+        567    56   5678 
+        """
         self.__test_columns_helper([two], [7, 6, 8])
         four.remove(0)
+        """
+        1     1    1    
+        56    5678 
+        """
         self.__test_columns_helper([two], [6, 8, 5])
         four.remove(1)
+        """
+        1     1    1    
+        56     
+        """
         self.__test_columns_helper([two], [6, 5, 5])
 
     def __test_columns_helper(self, rows: List[Row], target_lengths: List[int]):
