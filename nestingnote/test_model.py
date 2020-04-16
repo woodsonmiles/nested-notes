@@ -3,6 +3,8 @@ from nestingnote.model import Model
 from nestingnote.testView import TestView
 from nestingnote.nestedlist import NestedList
 from nestingnote.directions import LateralDirection, VerticalDirection
+import os
+from pathlib import Path
 
 
 class MyTestCase(unittest.TestCase):
@@ -13,7 +15,7 @@ class MyTestCase(unittest.TestCase):
         one = NestedList(["one"])
         two = one.insert_child(["two"])
         three = one.insert_sibling(["three"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 0
         self.assertEqual(model._Model__get_node(), one)
@@ -45,7 +47,7 @@ class MyTestCase(unittest.TestCase):
         one = NestedList(["one"])
         two = one.insert_child(["two"])
         three = one.insert_sibling(["three"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 0
         self.assertEqual(model.get_level(), 0)
         model._Model__cursor_y = 1
@@ -64,7 +66,7 @@ class MyTestCase(unittest.TestCase):
             three
         four
         """
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 3
         self.assertIs(one, model.get_previous_sibling())
         model._Model__cursor_y = 2
@@ -83,7 +85,7 @@ class MyTestCase(unittest.TestCase):
         four
             five
         """
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 2
         self.assertIs(one, model.get_parent())
         model._Model__cursor_y = 4
@@ -91,7 +93,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_get_column_width(self):
         one = NestedList(["one", "two.", "three"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 0
         self.assertEqual(model.get_column_width(), 7)
@@ -112,7 +114,7 @@ class MyTestCase(unittest.TestCase):
         right = LateralDirection.RIGHT
         left = LateralDirection.LEFT
         one = NestedList(["one", "two.", "three"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 0
         self.assertEqual(model.get_neighbor_column_width(right), 8)
@@ -136,7 +138,7 @@ class MyTestCase(unittest.TestCase):
         left = LateralDirection.LEFT
         fields = ["one", "two.", "three"]
         one = NestedList(fields)
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 0
         self.assertEqual(model.get_neighbor_field(right), fields[1])
@@ -158,7 +160,7 @@ class MyTestCase(unittest.TestCase):
     def test_get_padding_len(self):
         one = NestedList(["one", "two.", "three"])
         one.insert_sibling(["one", "two.5", "three56"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 0
         self.assertEqual(model.get_padding_len(), 4)
@@ -180,7 +182,7 @@ class MyTestCase(unittest.TestCase):
         left = LateralDirection.LEFT
         one = NestedList(["one", "two.", "three"])
         one.insert_sibling(["one", "two.5", "three56"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 0
         self.assertEqual(model.get_neighbor_padding_len(right), 5)
@@ -216,7 +218,7 @@ class MyTestCase(unittest.TestCase):
                 grandchild2
             child3
         """
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         self.assertFalse(model.is_first_child())
         model._Model__cursor_y = 1
@@ -245,7 +247,7 @@ class MyTestCase(unittest.TestCase):
                 grandchild2
             child3
         """
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         self.assertTrue(model.at_root())
         model._Model__cursor_y = 1
@@ -274,7 +276,7 @@ class MyTestCase(unittest.TestCase):
                 grandchild2
             child3
         """
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 0
         self.assertTrue(model.at_line_start())
@@ -314,7 +316,7 @@ class MyTestCase(unittest.TestCase):
     def test_at_line_end(self):
         root = NestedList(["root"])
         child = root.insert_child(["child", "child"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 4
         self.assertTrue(model.at_line_end())
@@ -332,7 +334,7 @@ class MyTestCase(unittest.TestCase):
         left = LateralDirection.LEFT
         root = NestedList(["root"])
         child = root.insert_child(["child", "child"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 0
         # root
@@ -370,7 +372,7 @@ class MyTestCase(unittest.TestCase):
         right = LateralDirection.RIGHT
         left = LateralDirection.LEFT
         root = NestedList(["root", "node"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 3
         model.move(right)
@@ -395,7 +397,7 @@ class MyTestCase(unittest.TestCase):
         three = two.insert_sibling(["3"])
         four = three.insert_sibling([""])
         five = four.insert_sibling()
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 8
         model.move(down)
@@ -415,7 +417,7 @@ class MyTestCase(unittest.TestCase):
         right = LateralDirection.RIGHT
         left = LateralDirection.LEFT
         root = NestedList(["root", "node"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 2
         model.move_end(right)
@@ -427,7 +429,7 @@ class MyTestCase(unittest.TestCase):
         right = LateralDirection.RIGHT
         left = LateralDirection.LEFT
         root = NestedList(["root", "node"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 2
         model.move_field_end(right)
@@ -437,7 +439,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_delete(self):
         root = NestedList(["root", "node"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 3
         model.delete(0)
@@ -447,7 +449,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_insert(self):
         root = NestedList(["root", "node"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 4
         model.insert('s')
@@ -455,7 +457,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_split_field(self):
         root = NestedList(["root", "node"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 3
         model.split_field()
@@ -465,7 +467,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_combine_field_right(self):
         root = NestedList(["root", "node"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 4
         model.combine_fields(LateralDirection.RIGHT)
@@ -476,7 +478,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_combine_field_left(self):
         root = NestedList(["root", "node"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         model._Model__cursor_y = 0
         model._Model__cursor_x = 8
         model.combine_fields(LateralDirection.LEFT)
@@ -490,7 +492,7 @@ class MyTestCase(unittest.TestCase):
         two = one.insert_sibling(["two"])
         three = two.insert_sibling(["three"])
         three.insert_sibling(["four"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         model._Model__cursor_y = 0
         self.assertRaises(Exception, lambda: model.indent_current_node())
         model._Model__cursor_y = 1
@@ -545,7 +547,7 @@ class MyTestCase(unittest.TestCase):
     def test_unindent_current_node_simple(self):
         one = NestedList(["one"])
         two = one.insert_child(["two"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         target = 'one\n' \
                  + '    two\n'
         actual = str(one)
@@ -567,7 +569,7 @@ class MyTestCase(unittest.TestCase):
         six = three.insert_sibling(["six"])
         six.insert_sibling(["seven"])
         one.insert_sibling(["eight"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         target =   'one\n' \
                  + '    two\n' \
                  + '    three\n' \
@@ -595,7 +597,7 @@ class MyTestCase(unittest.TestCase):
     def test_combine_nodes_simple(self):
         one = NestedList(["one"])
         two = one.insert_sibling(["two"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         target =   'one\n' \
                  + 'two\n'
         actual = str(one)
@@ -613,7 +615,7 @@ class MyTestCase(unittest.TestCase):
         three.insert_child(["four", "four", "four"])
         five = one.insert_sibling(["five", "five", "five"])
         five.insert_child(["six"])
-        model = Model(TestView([]), one)
+        model = Model(TestView([]), root=one)
         target = 'one\n' \
                  + '    two\n' \
                  + '        three\n' \
@@ -634,7 +636,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_split_node_simple(self):
         root = NestedList(["one", "two", "three"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         target = "one    two    three\n"
         actual = str(root)
         self.assertEqual(target, actual)
@@ -651,7 +653,7 @@ class MyTestCase(unittest.TestCase):
         one = root.insert_child(["one", "two", "three"])
         one.insert_child(["two"])
         one.insert_sibling(["three"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         target = "root\n" \
                 + "    one      two    three\n" \
                 + "        two\n" \
@@ -674,7 +676,7 @@ class MyTestCase(unittest.TestCase):
         one = root.insert_child(["one", "two", "three"])
         one.insert_child(["two"])
         one.insert_sibling(["three"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         target = "root\n" \
                  + "    one      two    three\n" \
                  + "        two\n" \
@@ -697,7 +699,7 @@ class MyTestCase(unittest.TestCase):
         one = root.insert_child(["one", "two", "three"])
         one.insert_child(["two"])
         one.insert_sibling(["three"])
-        model = Model(TestView([]), root)
+        model = Model(TestView([]), root=root)
         target = "root\n" \
                  + "    one      two    three\n" \
                  + "        two\n" \
@@ -722,14 +724,16 @@ class MyTestCase(unittest.TestCase):
         grandchild.insert_sibling(["gc2", "gc2"])
         sibling = root.insert_sibling()
         sibling.insert_sibling(["sib2", "sib2"])
-        file_path = '/tmp/nestedlist.nnn'
+        file_path = os.path.join(str(Path.home()), 'Documents', 'saveTest.nnn')
         model = Model(TestView([]), root=root)
         model.save(file_path)
         del model
         model = Model(TestView([]), file_path)
+        os.remove(file_path)
         copy = model._Model__root
         self.assertEqual(str(root), str(copy))
         self.assertEqual(root, copy)
+
 
 
 if __name__ == '__main__':

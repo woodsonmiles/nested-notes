@@ -293,7 +293,7 @@ class TestNestedList(unittest.TestCase):
     def test_serialization_simple(self):
         one = NestedList(["one", "two", "three"])
         pickle = one.serialize()
-        copy = NestedList._NestedList__deserialize(pickle)
+        copy = NestedList.deserialize(pickle)
         self.assertEqual(str(one), str(copy))
         self.assertEqual(one, copy)
 
@@ -306,7 +306,7 @@ class TestNestedList(unittest.TestCase):
         sibling.insert_sibling(["sib2", "sib2"])
 
         pickle = root.serialize()
-        copy = NestedList._NestedList__deserialize(pickle)
+        copy = NestedList.deserialize(pickle)
         self.assertEqual(str(root), str(copy))
         self.assertEqual(root, copy)
 

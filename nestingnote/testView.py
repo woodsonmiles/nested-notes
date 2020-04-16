@@ -8,12 +8,17 @@ class TestView(View):
     Dummy View only used for testing model
     """
 
+    @property
+    def num_columns(self):
+        return 100
+
+    @property
+    def num_rows(self):
+        return 100
+
     def __init__(self, keys: List[int]):
         self.__inputs = keys
         self.__next = 0
-
-    def get_size(self) -> (int, int):
-        return 100, 100
 
     def addstr(self, y: int, x: int, string: str, style: Styles):
         pass
