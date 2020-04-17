@@ -76,6 +76,11 @@ class Model(object):
         return self.__top + self.__window_rows
 
     @property
+    def __right(self) -> int:
+        """x axis Index of last character currently on screen"""
+        return self.__left + self.__window_columns
+
+    @property
     def __abs_cursor_x(self):
         """x axis index of cursor within text (not screen)"""
         return self.__cursor_x + self.__left
@@ -114,6 +119,10 @@ class Model(object):
 
     def move(self, direction: Direction, num_spaces: int = 1):
         if isinstance(direction, LateralDirection):
+            if self.__cursor_x == 0 and direction == LateralDirection.LEFT \
+                    or self.__cursor_x == self.__window_columns - 1 and direction == LateralDirection.RIGHT:
+                #if moving past right or left limits of screen
+                self.scroll(direction)
             self.__abs_cursor_x += direction * num_spaces
         else:  # VerticalDirection
             if self.__cursor_y == 0 and direction == VerticalDirection.UP \
@@ -133,14 +142,20 @@ class Model(object):
         node = self.__get_node()
         self.__abs_cursor_x = node.get_selected_field_end(self.__abs_cursor_x, direction)
 
-    def scroll(self, direction: VerticalDirection):
-        """Moves the screen up or down
+    def scroll(self, direction: Direction):
+        """Moves the screen
         Prevents the screen moving past the top or bottom of its text
         """
-        # if not at absolute top or bottom of lines
-        if direction == VerticalDirection.UP and self.__top > 0 \
-                or direction == VerticalDirection.DOWN and self.__root.count() > self.__bottom:
-            self.__top += direction
+        if isinstance(direction, LateralDirection):
+            # if not at absolute right or left
+            if direction == LateralDirection.LEFT and self.__left > 0 \
+                    or direction == LateralDirection.RIGHT and self.__get_node().width > self.__right:
+                self.__left += direction
+        else: # Vertical Direction
+            # if not at absolute top or bottom of lines
+            if direction == VerticalDirection.UP and self.__top > 0 \
+                    or direction == VerticalDirection.DOWN and self.__root.count() > self.__bottom:
+                self.__top += direction
 
     def page(self, direction: VerticalDirection):
         """Paging the window when pressing PgUp/PgDn keys"""
@@ -175,6 +190,9 @@ class Model(object):
                 break   # stop at end of window
             # Lines within visible screen
             indent_padding = node.indent_padding
+            chars_before_start = self.__left - len(indent_padding)
+            # padding within visible screen
+            indent_padding = indent_padding[self.__left:]
             self.__view.addstr(row_index, 0, indent_padding, Styles.EVEN)
             printed_chars = len(indent_padding)
             for field_index, text in enumerate(node.row_iter):
@@ -192,6 +210,10 @@ class Model(object):
                     style = Styles.EVEN
                 else:
                     style = Styles.ODD
+                if chars_before_start > 0:
+                    # If we haven't crossed the lateral start of the line
+                    text = text[chars_before_start:]
+                    chars_before_start -= len(text)
                 self.__view.addstr(row_index, printed_chars, text, style)
                 printed_chars += len(text)
         # banner
@@ -233,7 +255,8 @@ class Model(object):
         """
         node: NestedList = self.__get_node()
         node.delete_char_at(self.__abs_cursor_x + x_coord_offset)
-        self.__abs_cursor_x += x_coord_offset
+        # self.__abs_cursor_x += x_coord_offset
+        self.move(LateralDirection.LEFT, x_coord_offset)
 
     def is_first_child(self) -> bool:
         """
@@ -259,12 +282,14 @@ class Model(object):
         previous: NestedList = self.get_previous_sibling()
         node: NestedList = self.__get_node()
         node.indent(previous)
-        self.__abs_cursor_x += len(self.__tab)
+        # self.__abs_cursor_x += len(self.__tab)
+        self.move(LateralDirection.RIGHT, len(self.__tab))
 
     def unindent_current_node(self):
         parent: NestedList = self.get_parent()
         self.__get_node().unindent(parent)
-        self.__abs_cursor_x -= len(self.__tab)
+        # self.__abs_cursor_x -= len(self.__tab)
+        self.move(LateralDirection.LEFT, len(self.__tab))
 
     def get_previous_sibling(self) -> NestedList:
         """
@@ -295,7 +320,8 @@ class Model(object):
     def split_field(self):
         node = self.__get_node()
         node.split_field(self.__abs_cursor_x)
-        self.__abs_cursor_x += self.get_padding_len()
+        # self.__abs_cursor_x += self.get_padding_len()
+        self.move(LateralDirection.RIGHT, self.get_padding_len())
 
     def split_node(self):
         if self.at_line_end() or (not self.at_field_end(LateralDirection.LEFT)
@@ -386,7 +412,8 @@ class Model(object):
         movement = self.get_neighbor_padding_len(direction)
         node.combine_fields(self.__abs_cursor_x, direction)
         if direction == LateralDirection.LEFT:
-            self.__abs_cursor_x -= movement
+            # self.__abs_cursor_x -= movement
+            self.move(LateralDirection.LEFT, movement)
 
     def signal_user_error(self):
         self.__view.signal_user_error()
